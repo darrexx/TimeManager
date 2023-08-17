@@ -1,27 +1,16 @@
 <script lang="ts">
-	import Greet from '../lib/Greet.svelte';
-	import { Button, DarkMode, Heading, Hr } from 'flowbite-svelte';
-	import {invoke} from '@tauri-apps/api/tauri';
-	import {listen} from '@tauri-apps/api/event';
-	import { onMount } from 'svelte';
-
-	let counter = 0;
-	let date = new Date();
-
-	onMount(async () => {
-		const unlisten = await listen("timertick", (event) => {
-			console.log(event.payload)
-			counter = event.payload as number;
-		});
-	})
-
+	import { DarkMode, Hr } from 'flowbite-svelte';
+	import Timer from '$lib/Timer.svelte';
+	import ActivitySelector from '$lib/activities/ActivitySelector.svelte';
+	import ActivityHistory from '$lib/activities/ActivityHistory.svelte';
 </script>
 
-<Button on:click={() => invoke("start_timer")}>Start</Button>
+<Timer />
 
-<Heading tag="h1" class="mb-4 text-center" customSize="text-4xl font-extrabold  md:text-5xl lg:text-6xl">{counter}</Heading>
+<ActivitySelector />
 
-<Hr classHr="my-8" />
+<Hr classHr="m-8" />
 
-<DarkMode></DarkMode>
-<Heading tag="h1" class="mb-4 text-center" customSize="text-4xl font-extrabold  md:text-5xl lg:text-6xl">{date.toLocaleTimeString()}</Heading>
+<ActivityHistory />
+
+<DarkMode />
