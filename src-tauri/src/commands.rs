@@ -10,7 +10,6 @@ pub fn start_timer(sender_state: State<Sender<TimerCommand>>, timer_state: State
     let mut timer = timer_state.lock().unwrap();
     timer.running = true;
     timer.start_time = Some(chrono::Utc::now());
-
 }
 
 #[tauri::command]
@@ -23,7 +22,7 @@ pub fn stop_timer(sender_state: State<Sender<TimerCommand>>, timer_state: State<
 }
 
 #[tauri::command]
-pub fn reset_timer(sender_state: State<Sender<TimerCommand>>, timer_state: State<TimerState>){
+pub fn reset_timer(sender_state: State<Sender<TimerCommand>>, timer_state: State<TimerState>) {
     sender_state.send(TimerCommand::Reset).unwrap();
 
     let mut timer = timer_state.lock().unwrap();
