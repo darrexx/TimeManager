@@ -4,6 +4,8 @@
 	import duration from 'dayjs/plugin/duration'; // import plugin
 
 	dayjs.extend(duration);
+
+	export let activities: string[] = ['1', '2', '3', '4', '5'];
 </script>
 
 <Heading
@@ -12,7 +14,7 @@
 	customSize="text-3xl font-extrabold  md:text-5xl lg:text-5xl">Activities</Heading
 >
 <Timeline class="mx-4">
-	{#each [...Array(5).keys()] as activity}
+	{#each activities as activity}
 		<TimelineItem
 			title={`Title${activity}`}
 			date={`🕒${dayjs.duration(Math.random() * 20000, 'seconds').format('HH:mm:ss')}`}

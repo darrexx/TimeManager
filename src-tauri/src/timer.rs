@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use chrono::DateTime;
 use crossbeam::{
     channel::{Receiver, Sender, TryRecvError},
     select,
@@ -9,15 +8,9 @@ use crossbeam::{
 use tauri::{AppHandle, Manager, Runtime};
 
 pub enum TimerCommand {
-    Start,
+    Start(u64),
     Stop,
     Reset,
-}
-
-pub struct Timer {
-    pub running: bool,
-    pub start_time: Option<DateTime<chrono::Utc>>,
-    pub pause_start_time: Option<DateTime<chrono::Utc>>,
 }
 
 pub fn timer_handler<R: Runtime>(
@@ -35,7 +28,8 @@ pub fn timer_handler<R: Runtime>(
             {
                 match msg {
                     Ok(command) => match command {
-                        TimerCommand::Start => {
+                        TimerCommand::Start(existing_duration) => {
+                            ticks_per_100millis = existing_duration / 100;
                             unparker.unpark();
                             timer_sender.send(command).unwrap()
                         },
@@ -74,7 +68,7 @@ pub fn run_timer(rx: Receiver<TimerCommand>, tx: Sender<()>, parker: Parker) {
         let recv_result = rx.try_recv();
         match recv_result {
             Ok(command) => match command {
-                TimerCommand::Start => running = true,
+                TimerCommand::Start(_) => running = true,
                 TimerCommand::Stop => running = false,
                 _ => todo!(),
             },

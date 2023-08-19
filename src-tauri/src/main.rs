@@ -4,14 +4,18 @@
 use std::{sync::Mutex, thread};
 
 use crossbeam::{channel::bounded, sync::Parker};
-use timer::{run_timer, timer_handler, Timer, TimerCommand};
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::sqlite::SqliteConnection;
+use state::Timer;
+use timer::{run_timer, timer_handler, TimerCommand};
 
 use commands::{reset_timer, start_timer, stop_timer};
 
 mod commands;
+mod db;
+mod schema;
+mod state;
 mod timer;
-
-type TimerState = Mutex<Timer>;
 
 fn main() {
     let (command_sender, command_receiver) = bounded::<TimerCommand>(10); //To communicate with Handler, tx in state
@@ -20,10 +24,17 @@ fn main() {
         running: false,
         start_time: None,
         pause_start_time: None,
+        activity_name: None,
+        activity_duration: None,
     });
+
+    let database_pool = Pool::builder()
+        .build(ConnectionManager::<SqliteConnection>::new("activities.db"))
+        .unwrap();
 
     tauri::Builder::default()
         .manage(command_sender)
+        .manage(database_pool)
         .manage(timer_state)
         .setup(|app| {
             let app_handle = app.handle();

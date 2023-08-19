@@ -2,11 +2,14 @@
 	import { GradientButton, Heading } from 'flowbite-svelte';
 	import { invoke } from '@tauri-apps/api/tauri';
 	import { listen } from '@tauri-apps/api/event';
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import dayjs from 'dayjs';
 	import duration from 'dayjs/plugin/duration'; // import plugin
 
+	export let currentActivity = '';
+
 	let counter = 0;
+	const dispatch = createEventDispatcher();
 
 	dayjs.extend(duration);
 
@@ -16,9 +19,19 @@
 		});
 	});
 
+	const startTimer = () => {
+		console.log(currentActivity);
+		invoke('start_timer', { activityName: currentActivity });
+	};
+
 	const resetTimer = () => {
 		counter = 0;
 		invoke('reset_timer');
+	};
+
+	const stopTimer = () => {
+		dispatch('timerStopped');
+		invoke('stop_timer');
 	};
 </script>
 
@@ -30,11 +43,7 @@
 >
 
 <div class="m-3 flex flex-row gap-5 justify-around">
-	<GradientButton outline color="purpleToBlue" on:click={() => invoke('start_timer')}
-		>Start</GradientButton
-	>
-	<GradientButton outline color="purpleToBlue" on:click={() => invoke('stop_timer')}
-		>Stop</GradientButton
-	>
+	<GradientButton outline color="purpleToBlue" on:click={startTimer}>Start</GradientButton>
+	<GradientButton outline color="purpleToBlue" on:click={stopTimer}>Stop</GradientButton>
 	<GradientButton outline color="purpleToBlue" on:click={resetTimer}>Reset</GradientButton>
 </div>
