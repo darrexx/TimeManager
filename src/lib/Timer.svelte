@@ -20,7 +20,6 @@
 	});
 
 	const startTimer = () => {
-		console.log(currentActivity);
 		invoke('start_timer', { activityName: currentActivity });
 	};
 

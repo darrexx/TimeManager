@@ -1,15 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{sync::Mutex, thread};
-
+use commands::{get_activity_history, reset_timer, start_timer, stop_timer};
 use crossbeam::{channel::bounded, sync::Parker};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
 use state::Timer;
+use std::{sync::Mutex, thread};
 use timer::{run_timer, timer_handler, TimerCommand};
-
-use commands::{reset_timer, start_timer, stop_timer};
 
 mod commands;
 mod db;
@@ -62,7 +60,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             start_timer,
             stop_timer,
-            reset_timer
+            reset_timer,
+            get_activity_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

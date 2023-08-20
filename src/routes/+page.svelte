@@ -2,15 +2,23 @@
 	import { DarkMode, Hr } from 'flowbite-svelte';
 	import Timer from '$lib/Timer.svelte';
 	import ActivitySelector from '$lib/activities/ActivitySelector.svelte';
+	import { invoke } from '@tauri-apps/api/tauri';
+	import type { CommandActivity } from '$lib/activities/activity';
+	import { createActivity } from '$lib/activities/activity';
 	import ActivityHistory from '$lib/activities/ActivityHistory.svelte';
-
-	let activities = ['1', '2', '3', '4', '5'];
+	import { onMount } from 'svelte';
 
 	let currentActivity = '';
+	let activities: CommandActivity[] = [];
+
+	onMount(async () => {
+		activities = await invoke('get_activity_history');
+	});
 
 	const timerStopped = () => {
-		console.log('asdfstopped');
-		activities = [currentActivity, ...activities.slice(0, 4)];
+		setTimeout(async () => {
+			activities = await invoke('get_activity_history');
+		}, 500);
 	};
 </script>
 
@@ -20,6 +28,11 @@
 
 <Hr classHr="m-8" />
 
-<ActivityHistory {activities} />
+<!-- {#await activitiesPromise}
+	<ListPlaceholder />
+{:then activities}
+	<ActivityHistory activities={activities.map(createActivity)} />
+{/await} -->
+<ActivityHistory activities={activities.map(createActivity)} />
 
 <DarkMode />

@@ -1,17 +1,18 @@
+use crate::{
+    db::{
+        activity::{create_activity, get_activity, get_last_activities, update_activity},
+        models::Activity,
+    },
+    state::{set_start_state, TimerState},
+    timer::TimerCommand,
+};
 use chrono::Utc;
 use crossbeam::channel::Sender;
-
 use diesel::{
     r2d2::{ConnectionManager, Pool},
     SqliteConnection,
 };
 use tauri::State;
-
-use crate::{
-    db::activity::{create_activity, get_activity, update_activity},
-    state::{set_start_state, TimerState},
-    timer::TimerCommand,
-};
 
 #[tauri::command]
 pub fn start_timer(
@@ -77,4 +78,15 @@ pub fn reset_timer(sender_state: State<Sender<TimerCommand>>, timer_state: State
 
     let mut timer = timer_state.lock().unwrap();
     timer.start_time = Some(chrono::Utc::now());
+}
+
+#[tauri::command]
+pub fn get_activity_history(db: State<Pool<ConnectionManager<SqliteConnection>>>) -> Vec<Activity> {
+    // thread::sleep(Duration::seconds(2).to_std().unwrap());
+
+    let connection = &mut db.get().unwrap();
+    match get_last_activities(connection) {
+        Some(activities) => activities,
+        None => vec![],
+    }
 }

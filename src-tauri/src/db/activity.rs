@@ -1,10 +1,9 @@
+use crate::db::models::{Activity, NewActivity};
 use diesel::prelude::*;
 use diesel::{
     r2d2::{ConnectionManager, PooledConnection},
     SqliteConnection,
 };
-
-use crate::db::models::{Activity, NewActivity};
 
 pub fn create_activity(
     connection: &mut PooledConnection<ConnectionManager<SqliteConnection>>,
@@ -43,6 +42,27 @@ pub fn get_activity(
     }
 }
 
+pub fn get_last_activities(
+    connection: &mut PooledConnection<ConnectionManager<SqliteConnection>>,
+) -> Option<Vec<Activity>> {
+    use crate::schema::activities::dsl::*;
+
+    let results = activities
+        .order_by(last_modified.desc())
+        .limit(5)
+        .select(Activity::as_select())
+        .load(connection);
+
+    match results {
+        Ok(result_activites) => {
+            println!("{:?}", result_activites);
+            Some(result_activites)
+        }
+        Err(diesel::NotFound) => None,
+        Err(_) => panic!(),
+    }
+}
+
 pub fn update_activity(
     connection: &mut PooledConnection<ConnectionManager<SqliteConnection>>,
     activity_name: &String,
@@ -51,7 +71,10 @@ pub fn update_activity(
     use crate::schema::activities::dsl::*;
     diesel::update(activities)
         .filter(name.eq(activity_name))
-        .set(duration.eq(activity_duration.num_milliseconds()))
+        .set((
+            duration.eq(activity_duration.num_milliseconds()),
+            last_modified.eq(chrono::Utc::now().timestamp_millis()),
+        ))
         .execute(connection)
         .unwrap();
 }
