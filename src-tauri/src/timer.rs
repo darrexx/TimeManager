@@ -19,7 +19,7 @@ pub fn timer_handler<R: Runtime>(
     tick_receiver: Receiver<()>,
     timer_sender: Sender<TimerCommand>,
     unparker: Unparker,
-) {
+) -> ! {
     let mut ticks_per_100millis = 0;
 
     loop {
@@ -38,7 +38,7 @@ pub fn timer_handler<R: Runtime>(
                             ticks_per_100millis = 0;
                         },
                     },
-                    Err(_) =>  return,
+                    Err(_) =>  panic!("Could not Receive Command"),
                 }
             },
             recv(tick_receiver) -> msg => {
@@ -49,7 +49,7 @@ pub fn timer_handler<R: Runtime>(
                             app_handle.emit_all("timertick", ticks_per_100millis/10).unwrap();
                         }
                     },
-                    Err(_) => return,
+                    Err(_) => panic!("Could not Receive tick"),
                 }
 
             },
@@ -57,7 +57,7 @@ pub fn timer_handler<R: Runtime>(
     }
 }
 
-pub fn run_timer(rx: Receiver<TimerCommand>, tx: Sender<()>, parker: Parker) {
+pub fn run_timer(rx: Receiver<TimerCommand>, tx: Sender<()>, parker: Parker) -> ! {
     let mut running = false;
 
     loop {
@@ -74,7 +74,7 @@ pub fn run_timer(rx: Receiver<TimerCommand>, tx: Sender<()>, parker: Parker) {
             },
             Err(err) => {
                 if err == TryRecvError::Disconnected {
-                    return;
+                    panic!("command channel disconnected");
                 }
             }
         }
