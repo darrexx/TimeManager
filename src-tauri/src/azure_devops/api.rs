@@ -5,7 +5,7 @@ use super::response_types::{CurrentWorkitemsForMe, TeamProjects, Teams, Workitem
 
 #[derive(Error, Debug)]
 pub enum AzureDevopsError {
-    #[error("rewest Error")]
+    #[error("reqwest Error")]
     ReqwestError(reqwest::Error),
     #[error("authentication not valid")]
     Unauthorized,
@@ -44,8 +44,9 @@ pub async fn get_my_workitems_for_current_iteration(
 pub async fn get_team_projects(
     client: Client,
     base_url: String,
+    organization: String,
 ) -> Result<Vec<String>, AzureDevopsError> {
-    let url = format!("https://{base_url}/ahd/_apis/projects?api-version=7.0");
+    let url = format!("https://{base_url}/{organization}/_apis/projects?api-version=7.0");
 
     get(client, url, |x: TeamProjects| {
         x.value.into_iter().map(|x| x.name).collect()
@@ -57,9 +58,10 @@ pub async fn get_teams(
     client: Client,
     base_url: String,
     organization: String,
+    project_name: String,
 ) -> Result<Vec<String>, AzureDevopsError> {
     let url = format!(
-        "https://{base_url}/{organization}/_apis/projects/Development/teams?api-version=7.0"
+        "https://{base_url}/{organization}/_apis/projects/{project_name}/teams?api-version=7.0"
     );
 
     get(client, url, |x: Teams| {

@@ -3,6 +3,7 @@
 
 use base64::{engine::general_purpose, Engine as _};
 use commands::{get_activity_history, reset_timer, start_timer, stop_timer};
+use config::Config;
 use crossbeam::{channel::bounded, sync::Parker};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
@@ -13,12 +14,20 @@ use timer::{run_timer, timer_handler, TimerCommand};
 
 mod azure_devops;
 mod commands;
+mod config;
 mod db;
 mod schema;
 mod state;
 mod timer;
 
 fn main() {
+    let config: Config = confy::load("timemanager", None).unwrap();
+
+    let httpclient_pool =
+        configure_httpclient(&config.devops_config.user, &config.devops_config.pat);
+
+    let config_state = Mutex::new(config);
+
     let (command_sender, command_receiver) = bounded::<TimerCommand>(10); //To communicate with Handler, tx in state
 
     let timer_state = Mutex::new(Timer {
@@ -33,13 +42,12 @@ fn main() {
         .build(ConnectionManager::<SqliteConnection>::new("activities.db"))
         .unwrap();
 
-    let httpclient_pool = configure_httpclient(String::from("user"), String::from("pat"));
-
     tauri::Builder::default()
         .manage(command_sender)
         .manage(database_pool)
         .manage(timer_state)
         .manage(httpclient_pool)
+        .manage(config_state)
         .setup(|app| {
             let app_handle = app.handle();
 
@@ -73,7 +81,7 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-fn configure_httpclient(user: String, pat: String) -> Client {
+fn configure_httpclient(user: &String, pat: &String) -> Client {
     let mut headers = header::HeaderMap::new();
 
     let base64_auth_value = general_purpose::STANDARD_NO_PAD

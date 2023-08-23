@@ -54,10 +54,7 @@ pub fn get_last_activities(
         .load(connection);
 
     match results {
-        Ok(result_activites) => {
-            println!("{:?}", result_activites);
-            Some(result_activites)
-        }
+        Ok(result_activites) => Some(result_activites),
         Err(diesel::NotFound) => None,
         Err(_) => panic!(),
     }
