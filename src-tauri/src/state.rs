@@ -2,7 +2,7 @@ use std::sync::{Mutex, MutexGuard};
 
 use chrono::DateTime;
 
-use crate::db::models::Activity;
+use crate::{config::Config, db::models::Activity};
 
 pub struct Timer {
     pub running: bool,
@@ -13,6 +13,8 @@ pub struct Timer {
 }
 
 pub type TimerState = Mutex<Timer>;
+
+pub type ConfigState = Mutex<Config>;
 
 pub fn set_start_state(
     timer: &mut MutexGuard<'_, Timer>,

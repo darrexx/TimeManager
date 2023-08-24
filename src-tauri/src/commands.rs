@@ -1,9 +1,11 @@
 use crate::{
+    azure_devops::client::{configure_devops_httpclient, AzureDevopsClient},
+    config::Config,
     db::{
         activity::{create_activity, get_activity, get_last_activities, update_activity},
         models::Activity,
     },
-    state::{set_start_state, TimerState},
+    state::{set_start_state, ConfigState, TimerState},
     timer::TimerCommand,
 };
 use chrono::Utc;
@@ -12,7 +14,7 @@ use diesel::{
     r2d2::{ConnectionManager, Pool},
     SqliteConnection,
 };
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 #[tauri::command]
 pub fn start_timer(
@@ -82,11 +84,46 @@ pub fn reset_timer(sender_state: State<Sender<TimerCommand>>, timer_state: State
 
 #[tauri::command]
 pub fn get_activity_history(db: State<Pool<ConnectionManager<SqliteConnection>>>) -> Vec<Activity> {
-    // thread::sleep(Duration::seconds(2).to_std().unwrap());
-
     let connection = &mut db.get().unwrap();
     match get_last_activities(connection) {
         Some(activities) => activities,
         None => vec![],
     }
+}
+
+#[tauri::command]
+pub fn save_devops_config(
+    app_handle: AppHandle,
+    config: State<ConfigState>,
+    url: String,
+    user: String,
+    pat: String,
+    organization: String,
+    project: String,
+    team: String,
+) {
+    let devops_client = configure_devops_httpclient(&user, &pat);
+    app_handle.manage(AzureDevopsClient(devops_client));
+
+    let mut config = config.lock().unwrap();
+    config.devops_config.base_url = url;
+    config.devops_config.user = user;
+    config.devops_config.pat = pat;
+    config.devops_config.organization = organization;
+    config.devops_config.project = project;
+    config.devops_config.team = team;
+
+    confy::store("timemanager", None, Config::from(&config)).unwrap();
+}
+
+#[tauri::command]
+pub async fn test_command(app_handle: AppHandle) -> Result<String, String> {
+    println!("Command");
+
+    let client = app_handle.try_state::<AzureDevopsClient>();
+    match client {
+        Some(_) => println!("asdf"),
+        None => print!("qwer"),
+    };
+    Ok(String::from("a"))
 }

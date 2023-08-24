@@ -10,6 +10,7 @@
 
 	let currentActivity = '';
 	let activities: CommandActivity[] = [];
+	let useAzureDevops = false;
 
 	onMount(async () => {
 		activities = await invoke('get_activity_history');
@@ -24,7 +25,7 @@
 
 <Timer on:timerStopped={timerStopped} {currentActivity} />
 
-<ActivitySelector bind:value={currentActivity} />
+<ActivitySelector {useAzureDevops} bind:value={currentActivity} />
 
 <Hr classHr="m-8" />
 

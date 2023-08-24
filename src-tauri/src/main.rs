@@ -1,16 +1,17 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use base64::{engine::general_purpose, Engine as _};
+use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
 use commands::{get_activity_history, reset_timer, start_timer, stop_timer};
-use config::Config;
+use config::{AzureDevopsConfig, Config};
 use crossbeam::{channel::bounded, sync::Parker};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
-use reqwest::{header, Client};
 use state::Timer;
 use std::{sync::Mutex, thread};
 use timer::{run_timer, timer_handler, TimerCommand};
+
+use crate::commands::save_devops_config;
 
 mod azure_devops;
 mod commands;
@@ -21,12 +22,12 @@ mod state;
 mod timer;
 
 fn main() {
-    let config: Config = confy::load("timemanager", None).unwrap();
+    let config: Config = confy::load("timemanager", None).unwrap(); //https://github.com/rust-cli/confy/issues/11
 
-    let httpclient_pool =
-        configure_httpclient(&config.devops_config.user, &config.devops_config.pat);
-
-    let config_state = Mutex::new(config);
+    let httpclient_pool = AzureDevopsClient(configure_devops_httpclient(
+        &config.devops_config.user,
+        &config.devops_config.pat,
+    ));
 
     let (command_sender, command_receiver) = bounded::<TimerCommand>(10); //To communicate with Handler, tx in state
 
@@ -42,11 +43,18 @@ fn main() {
         .build(ConnectionManager::<SqliteConnection>::new("activities.db"))
         .unwrap();
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .manage(command_sender)
         .manage(database_pool)
-        .manage(timer_state)
-        .manage(httpclient_pool)
+        .manage(timer_state);
+
+    if config.devops_config != AzureDevopsConfig::default() {
+        builder = builder.manage(httpclient_pool);
+    }
+
+    let config_state = Mutex::new(config);
+
+    builder
         .manage(config_state)
         .setup(|app| {
             let app_handle = app.handle();
@@ -76,24 +84,8 @@ fn main() {
             stop_timer,
             reset_timer,
             get_activity_history,
+            save_devops_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-fn configure_httpclient(user: &String, pat: &String) -> Client {
-    let mut headers = header::HeaderMap::new();
-
-    let base64_auth_value = general_purpose::STANDARD_NO_PAD
-        .encode(format!("{user}:{pat}"))
-        .to_lowercase();
-    let basic_auth_header = format!("Basic {base64_auth_value}");
-    let mut auth_value = header::HeaderValue::from_str(basic_auth_header.as_str()).unwrap();
-    auth_value.set_sensitive(true);
-    headers.insert(header::AUTHORIZATION, auth_value);
-
-    match Client::builder().default_headers(headers).build() {
-        Ok(client) => client,
-        Err(_) => panic!("Could not build httpClientPool"),
-    }
 }
