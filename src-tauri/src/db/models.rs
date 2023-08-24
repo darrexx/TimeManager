@@ -10,6 +10,7 @@ pub struct Activity {
     pub duration: Option<i64>,
     pub created_at: i64,
     pub last_modified: i64,
+    pub workitem_id: Option<i64>,
 }
 
 #[derive(Insertable)]
@@ -19,4 +20,5 @@ pub struct NewActivity<'a> {
     pub duration: Option<i64>,
     pub created_at: i64,
     pub last_modified: i64,
+    pub workitem_id: Option<i64>,
 }

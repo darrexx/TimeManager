@@ -70,31 +70,31 @@ pub struct Fields {
     #[serde(rename = "System.State")]
     pub system_state: String,
     #[serde(rename = "System.Reason")]
-    pub system_reason: String,
+    pub system_reason: Option<String>,
     #[serde(rename = "System.AssignedTo")]
-    pub system_assigned_to: System,
+    pub system_assigned_to: Option<System>,
     #[serde(rename = "System.CreatedDate")]
     pub system_created_date: String,
     #[serde(rename = "System.CreatedBy")]
     pub system_created_by: System,
     #[serde(rename = "System.ChangedDate")]
-    pub system_changed_date: String,
+    pub system_changed_date: Option<String>,
     #[serde(rename = "System.ChangedBy")]
-    pub system_changed_by: System,
+    pub system_changed_by: Option<System>,
     #[serde(rename = "System.CommentCount")]
-    pub system_comment_count: i64,
+    pub system_comment_count: Option<i64>,
     #[serde(rename = "System.Title")]
     pub system_title: String,
     #[serde(rename = "Microsoft.VSTS.Common.ClosedDate")]
     pub microsoft_vsts_common_closed_date: Option<String>,
     #[serde(rename = "Microsoft.VSTS.Common.StateChangeDate")]
-    pub microsoft_vsts_common_state_change_date: String,
+    pub microsoft_vsts_common_state_change_date: Option<String>,
     #[serde(rename = "Microsoft.VSTS.Common.Priority")]
-    pub microsoft_vsts_common_priority: i64,
+    pub microsoft_vsts_common_priority: Option<i64>,
     #[serde(rename = "System.Description")]
     pub system_description: Option<String>,
-    #[serde(rename = "Microsoft.VSTS.Scheduling.RemainingWork")]
-    pub microsoft_vsts_scheduling_remaining_work: Option<i64>,
+    // #[serde(rename = "Microsoft.VSTS.Scheduling.RemainingWork")]
+    // pub microsoft_vsts_scheduling_remaining_work: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

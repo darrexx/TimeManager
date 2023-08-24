@@ -1,6 +1,6 @@
-use std::sync::{Mutex, MutexGuard};
-
 use chrono::DateTime;
+use tauri::async_runtime::Mutex;
+use tokio::sync::MutexGuard;
 
 use crate::{config::Config, db::models::Activity};
 

@@ -9,11 +9,11 @@
 
 	let hideAlert = true;
 	let openModal = false;
-	let workitems: Workitem[] = [
-		{ value: 'us', name: 'United States' },
-		{ value: 'ca', name: 'Canada' },
-		{ value: 'fr', name: 'France' }
-	];
+	let workitems: Workitem[] = [];
+
+	$: selectWorkitems = workitems.map((x) => {
+		return { value: x.id, name: x.name };
+	});
 
 	const onToogleChange = () => {
 		value = '';
@@ -22,10 +22,11 @@
 			invoke('get_workitems')
 				.then((message) => {
 					workitems = message as Workitem[];
+					hideAlert = true;
 				})
 				.catch((error) => {
-					if (error == 'Unauthorized') {
-						//show Modal
+					if (error == 'authentication not valid') {
+						openModal = true;
 					} else {
 						console.log(error);
 						hideAlert = false;
@@ -35,23 +36,17 @@
 	};
 </script>
 
-<DevopsModal bind:open={openModal} />
+<DevopsModal on:finished={onToogleChange} bind:open={openModal} />
 
 <div class="h-10 m-6 flex flex-row gap-4 justify-evenly">
 	{#if useAzureDevops}
-		<Select items={workitems} bind:value />
+		<Select items={selectWorkitems} bind:value />
 	{:else}
 		<Input type="text" placeholder="Activity" bind:value />
 	{/if}
 	<Toggle on:change={onToogleChange} bind:checked={useAzureDevops} color="blue"
 		>Use Azure DevOps</Toggle
 	>
-	<Button
-		on:click={() => {
-			openModal = true;
-		}}
-		>Modal
-	</Button>
 </div>
 
 <Alert border color="red" class={`mx-6 ${hideAlert ? 'hidden' : ''}`}

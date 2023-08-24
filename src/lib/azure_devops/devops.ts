@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/tauri';
 
 export interface Workitem {
-	value: string | number;
+	id: number;
 	name: string;
 }
 
@@ -26,7 +26,6 @@ export async function getProjects(
 		return [];
 	}
 	const json = await response.json();
-	console.log(json.value.map((x: { name: string }) => x.name));
 	return json.value.map((x: { name: string }) => x.name);
 }
 
@@ -49,7 +48,6 @@ export async function getTeams(
 		return [];
 	}
 	const json = await response.json();
-	console.log(json.value.map((x: { name: string }) => x.name));
 	return json.value.map((x: { name: string }) => x.name);
 }
 

@@ -16,6 +16,7 @@ pub fn create_activity(
         created_at: chrono::Utc::now().timestamp_millis(),
         last_modified: chrono::Utc::now().timestamp_millis(),
         duration: None,
+        workitem_id: None,
     };
 
     diesel::insert_into(activities::table)

@@ -1,6 +1,5 @@
-use std::sync::MutexGuard;
-
 use serde::{Deserialize, Serialize};
+use tokio::sync::MutexGuard;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {

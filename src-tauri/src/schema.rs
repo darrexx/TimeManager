@@ -7,5 +7,6 @@ diesel::table! {
         duration -> Nullable<BigInt>,
         created_at -> BigInt,
         last_modified -> BigInt,
+        workitem_id -> Nullable<BigInt>,
     }
 }

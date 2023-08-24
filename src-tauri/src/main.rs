@@ -2,16 +2,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
-use commands::{get_activity_history, reset_timer, start_timer, stop_timer};
+use commands::{
+    get_activity_history, get_workitems, reset_timer, save_devops_config, start_timer, stop_timer,
+};
 use config::{AzureDevopsConfig, Config};
 use crossbeam::{channel::bounded, sync::Parker};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
 use state::Timer;
-use std::{sync::Mutex, thread};
+use std::thread;
+use tauri::async_runtime::Mutex;
 use timer::{run_timer, timer_handler, TimerCommand};
-
-use crate::commands::save_devops_config;
 
 mod azure_devops;
 mod commands;
@@ -22,7 +23,7 @@ mod state;
 mod timer;
 
 fn main() {
-    let config: Config = confy::load("timemanager", None).unwrap(); //https://github.com/rust-cli/confy/issues/11
+    let config: Config = confy::load("timemanager", None).unwrap(); //TODO https://github.com/rust-cli/confy/issues/11
 
     let httpclient_pool = AzureDevopsClient(configure_devops_httpclient(
         &config.devops_config.user,
@@ -84,7 +85,8 @@ fn main() {
             stop_timer,
             reset_timer,
             get_activity_history,
-            save_devops_config
+            save_devops_config,
+            get_workitems
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

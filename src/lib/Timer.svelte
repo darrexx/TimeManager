@@ -7,6 +7,7 @@
 	import duration from 'dayjs/plugin/duration'; // import plugin
 
 	export let currentActivity = '';
+	export let useAzureDevops = false;
 
 	let counter = 0;
 	const dispatch = createEventDispatcher();
@@ -20,7 +21,11 @@
 	});
 
 	const startTimer = () => {
-		invoke('start_timer', { activityName: currentActivity });
+		if (useAzureDevops) {
+			//Todo command for workitems
+		} else {
+			invoke('start_timer', { activityName: currentActivity });
+		}
 	};
 
 	const resetTimer = () => {

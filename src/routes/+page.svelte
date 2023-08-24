@@ -23,7 +23,7 @@
 	};
 </script>
 
-<Timer on:timerStopped={timerStopped} {currentActivity} />
+<Timer {useAzureDevops} on:timerStopped={timerStopped} {currentActivity} />
 
 <ActivitySelector {useAzureDevops} bind:value={currentActivity} />
 

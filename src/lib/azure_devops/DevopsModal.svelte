@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button, Input, Label, Modal, Select } from 'flowbite-svelte';
 	import { ModalState, getProjects, getTeams, saveDevopsConfig } from './devops';
+	import { createEventDispatcher } from 'svelte';
 
 	export let open = false;
 	let state = ModalState.GetProject;
@@ -14,6 +15,8 @@
 	let projects: { name: string; value: string }[] = [];
 	let teams: { name: string; value: string }[] = [];
 
+	const dispatch = createEventDispatcher();
+
 	const handleClick = async () => {
 		switch (state) {
 			case ModalState.GetProject:
@@ -25,7 +28,6 @@
 				}
 				break;
 			case ModalState.GetTeams:
-				console.log(selectedProject);
 				teams = (await getTeams(server, user, pat, organization, selectedProject)).map((x) => {
 					return { name: x, value: x };
 				});
@@ -36,6 +38,7 @@
 			case ModalState.Finish:
 				saveDevopsConfig(server, user, pat, organization, selectedProject, selectedTeam);
 				open = false;
+				dispatch('finished');
 				break;
 		}
 	};
