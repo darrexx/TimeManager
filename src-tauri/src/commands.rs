@@ -1,11 +1,14 @@
 use crate::{
     azure_devops::{
-        api::{get_my_workitems_for_current_iteration, get_workitems_by_ids},
+        api::{
+            get_my_workitems_for_current_iteration, get_workitems_by_ids,
+            update_workitem_to_in_progress,
+        },
         client::{configure_devops_httpclient, AzureDevopsClient},
         error::AzureDevopsError,
         models::Workitem,
     },
-    config::Config,
+    config::{Config, FrontendConfig},
     db::{
         activity::{create_activity, get_activity, get_last_activities, update_activity},
         models::Activity,
@@ -23,26 +26,41 @@ use tauri::{AppHandle, Manager, State};
 
 #[tauri::command]
 pub async fn start_timer(
+    app_handle: AppHandle,
     sender_state: State<'_, Sender<TimerCommand>>,
     timer_state: State<'_, TimerState>,
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
+    config: State<'_, ConfigState>,
     activity_name: String,
 ) -> Result<(), ()> {
-    start_timer_internal(sender_state, timer_state, db, activity_name, None).await
+    start_timer_internal(
+        &app_handle,
+        sender_state,
+        timer_state,
+        db,
+        config,
+        activity_name,
+        None,
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn start_timer_with_workitem(
+    app_handle: AppHandle,
     sender_state: State<'_, Sender<TimerCommand>>,
     timer_state: State<'_, TimerState>,
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
+    config: State<'_, ConfigState>,
     workitem_name: String,
     workitem_id: i64,
 ) -> Result<(), ()> {
     start_timer_internal(
+        &app_handle,
         sender_state,
         timer_state,
         db,
+        config,
         workitem_name,
         Some(workitem_id),
     )
@@ -50,9 +68,11 @@ pub async fn start_timer_with_workitem(
 }
 
 async fn start_timer_internal(
+    app_handle: &AppHandle,
     sender_state: State<'_, Sender<TimerCommand>>,
     timer_state: State<'_, TimerState>,
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
+    config: State<'_, ConfigState>,
     activity_name: String,
     workitem_id: Option<i64>,
 ) -> Result<(), ()> {
@@ -72,6 +92,22 @@ async fn start_timer_internal(
         create_activity(connection, &activity_name, workitem_id);
         sender_state.send(TimerCommand::Start(0)).unwrap();
     }
+
+    let config = config.lock().await;
+    if config.devops_config.automatically_update_workitems && workitem_id.is_some() {
+        if let Some(client) = app_handle.try_state::<AzureDevopsClient>() {
+            update_workitem_to_in_progress(
+                client.get(),
+                &config.devops_config.base_url,
+                &config.devops_config.organization,
+                &config.devops_config.project,
+                workitem_id.unwrap(),
+            )
+            .await
+            .unwrap();
+        }
+    }
+
     Ok(())
 }
 
@@ -131,6 +167,7 @@ pub fn get_activity_history(db: State<Pool<ConnectionManager<SqliteConnection>>>
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn save_devops_config(
     app_handle: AppHandle,
@@ -198,8 +235,8 @@ pub async fn get_config(config: State<'_, ConfigState>) -> Result<Config, String
 }
 
 #[tauri::command]
-pub async fn set_config(config: Config) -> Result<(), ()> {
-    confy::store("timemanager", None, config).unwrap();
+pub async fn set_config(config: FrontendConfig) -> Result<(), ()> {
+    confy::store("timemanager", None, Config::from(config)).unwrap();
 
     Ok(())
 }

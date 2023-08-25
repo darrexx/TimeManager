@@ -53,7 +53,8 @@ fn main() {
 
     //Todo no darkmode until update https://github.com/tauri-apps/muda/issues/97
     let settings = CustomMenuItem::new("settings".to_string(), "Settings...");
-    let submenu = Submenu::new("File", Menu::new().add_item(settings));
+    let quit = CustomMenuItem::new("quit".to_string(), "Quit");
+    let submenu = Submenu::new("File", Menu::new().add_item(settings).add_item(quit));
     let menu = Menu::new().add_submenu(submenu);
 
     let mut builder = tauri::Builder::default()
@@ -71,6 +72,9 @@ fn main() {
                     .build()
                     .unwrap();
                 });
+            }
+            "quit" => {
+                std::process::exit(0);
             }
             _ => {}
         })

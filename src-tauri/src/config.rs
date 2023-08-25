@@ -48,3 +48,45 @@ impl Default for AzureDevopsConfig {
         }
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct FrontendConfig {
+    pub devops_config: FrontendAzureDevopsConfig,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct FrontendAzureDevopsConfig {
+    pub base_url: String,
+    pub user: String,
+    pub pat: String,
+    pub organization: String,
+    pub project: String,
+    pub team: String,
+    pub automatically_update_workitems: String,
+}
+
+impl From<FrontendConfig> for Config {
+    fn from(value: FrontendConfig) -> Self {
+        Self {
+            devops_config: AzureDevopsConfig::from(value.devops_config),
+        }
+    }
+}
+
+impl From<FrontendAzureDevopsConfig> for AzureDevopsConfig {
+    fn from(value: FrontendAzureDevopsConfig) -> Self {
+        Self {
+            base_url: value.base_url,
+            user: value.user,
+            pat: value.pat,
+            organization: value.organization,
+            project: value.project,
+            team: value.team,
+            automatically_update_workitems: value
+                .automatically_update_workitems
+                .to_lowercase()
+                .parse()
+                .unwrap(),
+        }
+    }
+}

@@ -17,15 +17,15 @@
 		configs = await invoke('get_config');
 	});
 
-	const onSave = () => {
-		invoke('set_config', { config: configs });
+	const onSave = async () => {
+		await invoke('set_config', { config: configs });
 		let settingsWindow = WebviewWindow.getByLabel('settings');
 		settingsWindow.close();
 	};
 </script>
 
 <Alert class="m-4" color="red" border
-	>The Seetings will <Span underline decorationClass="decoration-red-500 decoration-double"
+	>The Settings will <Span underline decorationClass="decoration-red-500 decoration-double"
 		>only</Span
 	> be applied after a Restart</Alert
 >

@@ -1,10 +1,10 @@
-use reqwest::{Client, Error, Response};
+use reqwest::{header, Client, Error, Response};
 
 use super::{
     client::AzureDevopsClient,
     error::AzureDevopsError,
     models::Workitem,
-    response_types::{CurrentWorkitemsForMe, TeamProjects, Teams, WorkitemList},
+    response_types::{CurrentWorkitemsForMe, TeamProjects, Teams, WorkitemList, WorkitemListValue},
 };
 
 macro_rules! wiql_query {
@@ -35,6 +35,7 @@ pub async fn get_my_workitems_for_current_iteration(
     .await
 }
 
+#[allow(dead_code)]
 pub async fn get_team_projects(
     client: &AzureDevopsClient,
     base_url: &String,
@@ -48,6 +49,7 @@ pub async fn get_team_projects(
     .await
 }
 
+#[allow(dead_code)]
 pub async fn get_teams(
     client: &AzureDevopsClient,
     base_url: &String,
@@ -90,6 +92,33 @@ pub async fn get_workitems_by_ids(
     .await
 }
 
+pub async fn update_workitem_to_in_progress(
+    client: &AzureDevopsClient,
+    base_url: &String,
+    organization: &String,
+    project_name: &String,
+    workitem_id: i64,
+) -> Result<(), AzureDevopsError> {
+    let body = r#"[
+        {
+          "op": "add",
+          "path": "/fields/System.State",
+          "value": "In Progress"
+        }
+      ]
+      "#;
+    let url = format!("https://{base_url}/{organization}/{project_name}/_apis/wit/workitems/{workitem_id}?api-version=7.0");
+
+    patch(
+        &client.0,
+        url,
+        body.into(),
+        String::from("application/json-patch+json"),
+        |_: WorkitemListValue| (),
+    )
+    .await
+}
+
 async fn get<ResponseType: for<'de> serde::Deserialize<'de>, ReturnType>(
     client: &Client,
     url: String,
@@ -107,6 +136,23 @@ async fn post<ResponseType: for<'de> serde::Deserialize<'de>, ReturnType>(
     f: fn(ResponseType) -> ReturnType,
 ) -> Result<ReturnType, AzureDevopsError> {
     let result = client.post(url).body(body).send().await;
+
+    parse_result(result, f).await
+}
+
+async fn patch<ResponseType: for<'de> serde::Deserialize<'de>, ReturnType>(
+    client: &Client,
+    url: String,
+    body: String,
+    content_type: String,
+    f: fn(ResponseType) -> ReturnType,
+) -> Result<ReturnType, AzureDevopsError> {
+    let result = client
+        .patch(url)
+        .header(header::CONTENT_TYPE, content_type)
+        .body(body)
+        .send()
+        .await;
 
     parse_result(result, f).await
 }
