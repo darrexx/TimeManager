@@ -4,12 +4,12 @@
 	import { invoke } from '@tauri-apps/api/tauri';
 	import { Alert, Button, Input, Select, Toggle } from 'flowbite-svelte';
 
-	export let value = '';
+	export let value: number | string = '';
 	export let useAzureDevops = false;
+	export let workitems: Workitem[] = [];
 
 	let hideAlert = true;
 	let openModal = false;
-	let workitems: Workitem[] = [];
 
 	$: selectWorkitems = workitems.map((x) => {
 		return { value: x.id, name: x.name };

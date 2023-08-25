@@ -28,6 +28,34 @@ pub async fn start_timer(
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
     activity_name: String,
 ) -> Result<(), ()> {
+    start_timer_internal(sender_state, timer_state, db, activity_name, None).await
+}
+
+#[tauri::command]
+pub async fn start_timer_with_workitem(
+    sender_state: State<'_, Sender<TimerCommand>>,
+    timer_state: State<'_, TimerState>,
+    db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
+    workitem_name: String,
+    workitem_id: i64,
+) -> Result<(), ()> {
+    start_timer_internal(
+        sender_state,
+        timer_state,
+        db,
+        workitem_name,
+        Some(workitem_id),
+    )
+    .await
+}
+
+async fn start_timer_internal(
+    sender_state: State<'_, Sender<TimerCommand>>,
+    timer_state: State<'_, TimerState>,
+    db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
+    activity_name: String,
+    workitem_id: Option<i64>,
+) -> Result<(), ()> {
     let mut timer = timer_state.lock().await;
     let connection = &mut db.get().unwrap();
 
@@ -41,7 +69,7 @@ pub async fn start_timer(
             .send(TimerCommand::Start(existing_duration as u64))
             .unwrap();
     } else {
-        create_activity(connection, &activity_name);
+        create_activity(connection, &activity_name, workitem_id);
         sender_state.send(TimerCommand::Start(0)).unwrap();
     }
     Ok(())
@@ -160,16 +188,4 @@ pub async fn get_workitems(
     } else {
         Err(AzureDevopsError::Unauthorized)
     }
-}
-
-#[tauri::command]
-pub async fn test_command(app_handle: AppHandle) -> Result<String, String> {
-    println!("Command");
-
-    let client = app_handle.try_state::<AzureDevopsClient>();
-    match client {
-        Some(_) => println!("asdf"),
-        None => print!("qwer"),
-    };
-    Ok(String::from("a"))
 }

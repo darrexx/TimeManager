@@ -3,12 +3,14 @@
 
 use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
 use commands::{
-    get_activity_history, get_workitems, reset_timer, save_devops_config, start_timer, stop_timer,
+    get_activity_history, get_workitems, reset_timer, save_devops_config, start_timer,
+    start_timer_with_workitem, stop_timer,
 };
 use config::{AzureDevopsConfig, Config};
 use crossbeam::{channel::bounded, sync::Parker};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use state::Timer;
 use std::thread;
 use tauri::async_runtime::Mutex;
@@ -22,15 +24,17 @@ mod schema;
 mod state;
 mod timer;
 
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
 fn main() {
-    let config: Config = confy::load("timemanager", None).unwrap(); //TODO https://github.com/rust-cli/confy/issues/11
+    let config: Config = confy::load("timemanager", None).unwrap();
 
     let httpclient_pool = AzureDevopsClient(configure_devops_httpclient(
         &config.devops_config.user,
         &config.devops_config.pat,
     ));
 
-    let (command_sender, command_receiver) = bounded::<TimerCommand>(10); //To communicate with Handler, tx in state
+    let (command_sender, command_receiver) = bounded::<TimerCommand>(10);
 
     let timer_state = Mutex::new(Timer {
         running: false,
@@ -43,6 +47,8 @@ fn main() {
     let database_pool = Pool::builder()
         .build(ConnectionManager::<SqliteConnection>::new("activities.db"))
         .unwrap();
+
+    run_db_migrations(&mut database_pool.get().unwrap());
 
     let mut builder = tauri::Builder::default()
         .manage(command_sender)
@@ -86,8 +92,14 @@ fn main() {
             reset_timer,
             get_activity_history,
             save_devops_config,
-            get_workitems
+            get_workitems,
+            start_timer_with_workitem
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn run_db_migrations(conn: &mut impl MigrationHarness<diesel::sqlite::Sqlite>) {
+    conn.run_pending_migrations(MIGRATIONS)
+        .expect("Could not run migrations");
 }

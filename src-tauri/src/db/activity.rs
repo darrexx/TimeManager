@@ -8,6 +8,7 @@ use diesel::{
 pub fn create_activity(
     connection: &mut PooledConnection<ConnectionManager<SqliteConnection>>,
     activity_name: &String,
+    workitem_id: Option<i64>,
 ) {
     use crate::schema::activities;
 
@@ -16,7 +17,7 @@ pub fn create_activity(
         created_at: chrono::Utc::now().timestamp_millis(),
         last_modified: chrono::Utc::now().timestamp_millis(),
         duration: None,
-        workitem_id: None,
+        workitem_id: workitem_id,
     };
 
     diesel::insert_into(activities::table)
