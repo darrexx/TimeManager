@@ -22,7 +22,7 @@ use diesel::{
     r2d2::{ConnectionManager, Pool},
     SqliteConnection,
 };
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, Menu, State};
 
 #[tauri::command]
 pub async fn start_timer(
@@ -238,5 +238,30 @@ pub async fn get_config(config: State<'_, ConfigState>) -> Result<Config, String
 pub async fn set_config(config: FrontendConfig) -> Result<(), ()> {
     confy::store("timemanager", None, Config::from(config)).unwrap();
 
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn toggle_popout(app_handle: AppHandle, active: bool) -> Result<(), ()> {
+    if active {
+        std::thread::spawn(move || {
+            tauri::WindowBuilder::new(
+                &app_handle,
+                "popout",
+                tauri::WindowUrl::App("popout".into()),
+            )
+            .title("popout")
+            .transparent(true)
+            .decorations(false)
+            .resizable(false)
+            .inner_size(165f64, 45f64)
+            .always_on_top(true)
+            .menu(Menu::new())
+            .build()
+            .unwrap();
+        });
+    } else {
+        app_handle.get_window("popout").unwrap().close().unwrap();
+    }
     Ok(())
 }

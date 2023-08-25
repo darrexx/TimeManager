@@ -4,7 +4,7 @@
 use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
 use commands::{
     get_activity_history, get_config, get_workitems, reset_timer, save_devops_config, set_config,
-    start_timer, start_timer_with_workitem, stop_timer,
+    start_timer, start_timer_with_workitem, stop_timer, toggle_popout,
 };
 use config::{AzureDevopsConfig, Config};
 use crossbeam::{channel::bounded, sync::Parker};
@@ -122,7 +122,8 @@ fn main() {
             get_workitems,
             start_timer_with_workitem,
             get_config,
-            set_config
+            set_config,
+            toggle_popout
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

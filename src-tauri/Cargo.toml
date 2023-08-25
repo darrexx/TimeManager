@@ -17,7 +17,7 @@ tauri-build = { version = "1.4.0", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.4.0", features = ["window-close"] }
+tauri = { version = "1.4.0", features = [ "window-start-dragging", "window-close"] }
 chrono = "0.4.26"
 spin_sleep = "1.1.1"
 crossbeam = { version = "0.8.2", features = ["crossbeam-channel"] }
