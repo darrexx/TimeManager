@@ -189,3 +189,17 @@ pub async fn get_workitems(
         Err(AzureDevopsError::Unauthorized)
     }
 }
+
+#[tauri::command]
+pub async fn get_config(config: State<'_, ConfigState>) -> Result<Config, String> {
+    let config = config.lock().await;
+
+    Ok(Config::from(&config))
+}
+
+#[tauri::command]
+pub async fn set_config(config: Config) -> Result<(), ()> {
+    confy::store("timemanager", None, config).unwrap();
+
+    Ok(())
+}

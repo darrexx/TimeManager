@@ -3,8 +3,8 @@
 
 use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
 use commands::{
-    get_activity_history, get_workitems, reset_timer, save_devops_config, start_timer,
-    start_timer_with_workitem, stop_timer,
+    get_activity_history, get_config, get_workitems, reset_timer, save_devops_config, set_config,
+    start_timer, start_timer_with_workitem, stop_timer,
 };
 use config::{AzureDevopsConfig, Config};
 use crossbeam::{channel::bounded, sync::Parker};
@@ -14,6 +14,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use state::Timer;
 use std::thread;
 use tauri::async_runtime::Mutex;
+use tauri::{CustomMenuItem, Manager, Menu, Submenu};
 use timer::{run_timer, timer_handler, TimerCommand};
 
 mod azure_devops;
@@ -50,7 +51,29 @@ fn main() {
 
     run_db_migrations(&mut database_pool.get().unwrap());
 
+    //Todo no darkmode until update https://github.com/tauri-apps/muda/issues/97
+    let settings = CustomMenuItem::new("settings".to_string(), "Settings...");
+    let submenu = Submenu::new("File", Menu::new().add_item(settings));
+    let menu = Menu::new().add_submenu(submenu);
+
     let mut builder = tauri::Builder::default()
+        .menu(menu)
+        .on_menu_event(|event| match event.menu_item_id() {
+            "settings" => {
+                let handle = event.window().app_handle();
+                std::thread::spawn(move || {
+                    tauri::WindowBuilder::new(
+                        &handle,
+                        "settings",
+                        tauri::WindowUrl::App("settings".into()),
+                    )
+                    .title("Settings")
+                    .build()
+                    .unwrap();
+                });
+            }
+            _ => {}
+        })
         .manage(command_sender)
         .manage(database_pool)
         .manage(timer_state);
@@ -93,7 +116,9 @@ fn main() {
             get_activity_history,
             save_devops_config,
             get_workitems,
-            start_timer_with_workitem
+            start_timer_with_workitem,
+            get_config,
+            set_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
