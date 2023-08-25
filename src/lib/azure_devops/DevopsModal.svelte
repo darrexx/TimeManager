@@ -49,7 +49,13 @@
 	<div class="grid grid-cols-2 gap-6">
 		<div class="col-span-2">
 			<Label for="devops_server" class="mb-2">Azure Devops Server</Label>
-			<Input placeholder="dev.azure.com" id="devops_server" required bind:value={server} />
+			<Input
+				placeholder="dev.azure.com"
+				id="devops_server"
+				required
+				bind:value={server}
+				disabled={state != ModalState.GetProject}
+			/>
 		</div>
 		<div class="col-span-2">
 			<Label for="devops_organization" class="mb-2">Organization</Label>
@@ -58,15 +64,28 @@
 				id="devops_organization"
 				required
 				bind:value={organization}
+				disabled={state != ModalState.GetProject}
 			/>
 		</div>
 		<div>
 			<Label for="devops_user" class="mb-2">User</Label>
-			<Input placeholder="user" id="devops_user" required bind:value={user} />
+			<Input
+				placeholder="user"
+				id="devops_user"
+				required
+				bind:value={user}
+				disabled={state != ModalState.GetProject}
+			/>
 		</div>
 		<div>
 			<Label for="devops_pat" class="mb-2">PAT</Label>
-			<Input placeholder="PAT" id="devops_pat" required bind:value={pat} />
+			<Input
+				placeholder="PAT"
+				id="devops_pat"
+				required
+				bind:value={pat}
+				disabled={state != ModalState.GetProject}
+			/>
 		</div>
 		{#if projects.length != 0}
 			<div class="col-span-2">
@@ -76,6 +95,7 @@
 					items={projects}
 					bind:value={selectedProject}
 					placeholder="Select project..."
+					disabled={state != ModalState.GetTeams}
 				/>
 			</div>
 		{/if}
