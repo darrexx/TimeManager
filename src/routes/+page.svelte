@@ -9,15 +9,18 @@
 	import { onMount } from 'svelte';
 	import type { Workitem } from '$lib/azure_devops/devops';
 	import { Icon } from 'flowbite-svelte-icons';
+	import type { FrontendState } from '$lib/state';
 
 	let currentActivity: number | string = '';
 	let activities: CommandActivity[] = [];
 	let useAzureDevops = false;
 	let workitems: Workitem[];
-	let popoutActive = false;
+	let frontendState: FrontendState = { current_activity: '', popout_active: false };
 
 	onMount(async () => {
 		activities = await invoke('get_activity_history');
+		frontendState = await invoke('get_frontend_state');
+		frontendState.current_activity ??= '';
 	});
 
 	const timerStarted = () => {
@@ -39,8 +42,8 @@
 	};
 
 	const onPopout = () => {
-		popoutActive = !popoutActive;
-		invoke('toggle_popout', { active: popoutActive });
+		frontendState.popout_active = !frontendState.popout_active;
+		invoke('toggle_popout', { active: frontendState.popout_active });
 	};
 </script>
 
@@ -54,7 +57,9 @@
 			><Icon
 				class="self-center"
 				name={`${
-					popoutActive ? 'arrow-left-to-bracket-outline' : 'arrow-right-to-bracket-outline'
+					frontendState.popout_active
+						? 'arrow-left-to-bracket-outline'
+						: 'arrow-right-to-bracket-outline'
 				}`}
 			/></button
 		>

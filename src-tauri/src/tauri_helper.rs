@@ -65,12 +65,11 @@ impl<R: Runtime> ConfigureTauri for tauri::Builder<R> {
                         }
                         window.set_focus().unwrap();
                     } else {
-                        tauri::WindowBuilder::from_config(
-                            app,
-                            app.config().tauri.windows.get(0).unwrap().clone(),
-                        )
-                        .build()
-                        .unwrap();
+                        let mut window_config = app.config().tauri.windows.get(0).unwrap().clone();
+                        window_config.center = true;
+                        tauri::WindowBuilder::from_config(app, window_config)
+                            .build()
+                            .unwrap();
                     }
                 }
                 SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {

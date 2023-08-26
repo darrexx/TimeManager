@@ -15,7 +15,7 @@ use crate::{
         },
         models::Activity,
     },
-    state::{set_start_state, ConfigState, TimerState},
+    state::{set_start_state, ConfigState, Frontend, FrontendState, TimerState},
     timer::TimerCommand,
 };
 use chrono::Utc;
@@ -33,6 +33,7 @@ pub async fn start_timer(
     timer_state: State<'_, TimerState>,
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
     config: State<'_, ConfigState>,
+    frontend_state: State<'_, FrontendState>,
     activity_name: String,
 ) -> Result<(), ()> {
     start_timer_internal(
@@ -41,6 +42,7 @@ pub async fn start_timer(
         timer_state,
         db,
         config,
+        frontend_state,
         activity_name,
         None,
     )
@@ -54,6 +56,7 @@ pub async fn start_timer_with_workitem(
     timer_state: State<'_, TimerState>,
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
     config: State<'_, ConfigState>,
+    frontend_state: State<'_, FrontendState>,
     workitem_name: String,
     workitem_id: i64,
 ) -> Result<(), ()> {
@@ -63,6 +66,7 @@ pub async fn start_timer_with_workitem(
         timer_state,
         db,
         config,
+        frontend_state,
         workitem_name,
         Some(workitem_id),
     )
@@ -75,9 +79,13 @@ async fn start_timer_internal(
     timer_state: State<'_, TimerState>,
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
     config: State<'_, ConfigState>,
+    frontend_state: State<'_, FrontendState>,
     activity_name: String,
     workitem_id: Option<i64>,
 ) -> Result<(), ()> {
+    let mut frontend_state = frontend_state.lock().await;
+    frontend_state.current_activity = Some(activity_name.clone());
+
     let mut timer = timer_state.lock().await;
     let connection = &mut db.get().unwrap();
 
@@ -253,7 +261,14 @@ pub async fn set_config(config: FrontendConfig) -> Result<(), ()> {
 }
 
 #[tauri::command]
-pub async fn toggle_popout(app_handle: AppHandle, active: bool) -> Result<(), ()> {
+pub async fn toggle_popout(
+    app_handle: AppHandle,
+    frontend_state: State<'_, FrontendState>,
+    active: bool,
+) -> Result<(), ()> {
+    let mut state = frontend_state.lock().await;
+    state.popout_active = active;
+
     if active {
         std::thread::spawn(move || {
             tauri::WindowBuilder::new(
@@ -276,4 +291,11 @@ pub async fn toggle_popout(app_handle: AppHandle, active: bool) -> Result<(), ()
         app_handle.get_window("popout").unwrap().close().unwrap();
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_frontend_state(frontend_state: State<'_, FrontendState>) -> Result<Frontend, ()> {
+    let state = frontend_state.lock().await;
+
+    Ok(Frontend::from(&state))
 }

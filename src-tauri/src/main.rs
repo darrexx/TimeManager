@@ -3,16 +3,16 @@
 
 use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
 use commands::{
-    get_activities, get_activity_history, get_config, get_workitems, reset_timer,
-    save_devops_config, set_config, start_timer, start_timer_with_workitem, stop_timer,
-    toggle_popout,
+    get_activities, get_activity_history, get_config, get_frontend_state, get_workitems,
+    reset_timer, save_devops_config, set_config, start_timer, start_timer_with_workitem,
+    stop_timer, toggle_popout,
 };
 use config::{AzureDevopsConfig, Config};
 use crossbeam::channel::bounded;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use state::Timer;
+use state::{Frontend, Timer};
 use tauri::async_runtime::Mutex;
 use tauri_helper::ConfigureTauri;
 use timer::TimerCommand;
@@ -52,12 +52,15 @@ fn main() {
 
     run_db_migrations(&mut database_pool.get().unwrap());
 
+    let frontend_state = Mutex::new(Frontend::default());
+
     let mut builder = tauri::Builder::default()
         .configure_window_menu()
         .configure_tray_menu()
         .manage(command_sender)
         .manage(database_pool)
-        .manage(timer_state);
+        .manage(timer_state)
+        .manage(frontend_state);
 
     if config.devops_config != AzureDevopsConfig::default() {
         builder = builder.manage(httpclient_pool);
@@ -79,7 +82,8 @@ fn main() {
             get_config,
             set_config,
             toggle_popout,
-            get_activities
+            get_activities,
+            get_frontend_state
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

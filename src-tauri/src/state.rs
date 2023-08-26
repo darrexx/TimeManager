@@ -1,4 +1,5 @@
 use chrono::DateTime;
+use serde::{Deserialize, Serialize};
 use tauri::async_runtime::Mutex;
 use tokio::sync::MutexGuard;
 
@@ -13,6 +14,32 @@ pub struct Timer {
 }
 
 pub type TimerState = Mutex<Timer>;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Frontend {
+    pub current_activity: Option<String>,
+    pub popout_active: bool,
+}
+
+impl Default for Frontend {
+    fn default() -> Self {
+        Self {
+            current_activity: None,
+            popout_active: false,
+        }
+    }
+}
+
+pub type FrontendState = Mutex<Frontend>;
+
+impl From<&MutexGuard<'_, Frontend>> for Frontend {
+    fn from(value: &MutexGuard<'_, Frontend>) -> Self {
+        Self {
+            current_activity: value.current_activity.clone(),
+            popout_active: value.popout_active,
+        }
+    }
+}
 
 pub type ConfigState = Mutex<Config>;
 
