@@ -7,15 +7,14 @@ use commands::{
     start_timer, start_timer_with_workitem, stop_timer, toggle_popout,
 };
 use config::{AzureDevopsConfig, Config};
-use crossbeam::{channel::bounded, sync::Parker};
+use crossbeam::channel::bounded;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use state::Timer;
-use std::thread;
 use tauri::async_runtime::Mutex;
-use tauri::{CustomMenuItem, Manager, Menu, Submenu};
-use timer::{run_timer, timer_handler, TimerCommand};
+use tauri_helper::ConfigureTauri;
+use timer::TimerCommand;
 
 mod azure_devops;
 mod commands;
@@ -23,6 +22,7 @@ mod config;
 mod db;
 mod schema;
 mod state;
+mod tauri_helper;
 mod timer;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -51,33 +51,9 @@ fn main() {
 
     run_db_migrations(&mut database_pool.get().unwrap());
 
-    //Todo no darkmode until update https://github.com/tauri-apps/muda/issues/97
-    let settings = CustomMenuItem::new("settings".to_string(), "Settings...");
-    let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-    let submenu = Submenu::new("File", Menu::new().add_item(settings).add_item(quit));
-    let menu = Menu::new().add_submenu(submenu);
-
     let mut builder = tauri::Builder::default()
-        .menu(menu)
-        .on_menu_event(|event| match event.menu_item_id() {
-            "settings" => {
-                let handle = event.window().app_handle();
-                std::thread::spawn(move || {
-                    tauri::WindowBuilder::new(
-                        &handle,
-                        "settings",
-                        tauri::WindowUrl::App("settings".into()),
-                    )
-                    .title("Settings")
-                    .build()
-                    .unwrap();
-                });
-            }
-            "quit" => {
-                std::process::exit(0);
-            }
-            _ => {}
-        })
+        .configure_window_menu()
+        .configure_tray_menu()
         .manage(command_sender)
         .manage(database_pool)
         .manage(timer_state);
@@ -90,29 +66,7 @@ fn main() {
 
     builder
         .manage(config_state)
-        .setup(|app| {
-            let app_handle = app.handle();
-
-            let (tick_sender, tick_receiver) = bounded::<()>(5);
-            let (timer_sender, timer_receiver) = bounded::<TimerCommand>(5);
-
-            let p = Parker::new();
-            let u = p.unparker().clone();
-
-            thread::spawn(move || {
-                timer_handler(
-                    &app_handle,
-                    command_receiver,
-                    tick_receiver,
-                    timer_sender,
-                    u,
-                )
-            });
-
-            thread::spawn(move || run_timer(timer_receiver, tick_sender, p));
-
-            Ok(())
-        })
+        .setup_tauri(command_receiver)
         .invoke_handler(tauri::generate_handler![
             start_timer,
             stop_timer,

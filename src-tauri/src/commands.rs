@@ -257,6 +257,7 @@ pub async fn toggle_popout(app_handle: AppHandle, active: bool) -> Result<(), ()
             .inner_size(165f64, 45f64)
             .always_on_top(true)
             .menu(Menu::new())
+            .skip_taskbar(true)
             .build()
             .unwrap();
         });
