@@ -62,6 +62,23 @@ pub fn get_last_activities(
     }
 }
 
+pub fn get_all_activities(
+    connection: &mut PooledConnection<ConnectionManager<SqliteConnection>>,
+) -> Option<Vec<Activity>> {
+    use crate::schema::activities::dsl::*;
+
+    let results = activities
+        .order_by(last_modified.desc())
+        .select(Activity::as_select())
+        .load(connection);
+
+    match results {
+        Ok(result_activites) => Some(result_activites),
+        Err(diesel::NotFound) => None,
+        Err(_) => panic!(),
+    }
+}
+
 pub fn update_activity(
     connection: &mut PooledConnection<ConnectionManager<SqliteConnection>>,
     activity_name: &String,

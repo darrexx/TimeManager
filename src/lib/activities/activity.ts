@@ -7,6 +7,7 @@ export interface Activity {
 	timeSpent: duration.Duration;
 	lastModified: Dayjs;
 	createdAt: Dayjs;
+	workitem_id: number;
 }
 
 export interface CommandActivity {
@@ -15,6 +16,7 @@ export interface CommandActivity {
 	id: number;
 	last_modified: number;
 	name: string;
+	workitem_id: number;
 }
 
 export function createActivity(commandActivity: CommandActivity): Activity {
@@ -23,6 +25,7 @@ export function createActivity(commandActivity: CommandActivity): Activity {
 		id: commandActivity.id,
 		lastModified: dayjs(commandActivity.last_modified),
 		name: commandActivity.name,
-		timeSpent: dayjs.duration(dayjs(commandActivity.duration).diff(dayjs.unix(0)))
+		timeSpent: dayjs.duration(dayjs(commandActivity.duration).diff(dayjs.unix(0))),
+		workitem_id: commandActivity.workitem_id
 	};
 }

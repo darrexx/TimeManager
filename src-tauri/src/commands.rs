@@ -10,7 +10,9 @@ use crate::{
     },
     config::{Config, FrontendConfig},
     db::{
-        activity::{create_activity, get_activity, get_last_activities, update_activity},
+        activity::{
+            create_activity, get_activity, get_all_activities, get_last_activities, update_activity,
+        },
         models::Activity,
     },
     state::{set_start_state, ConfigState, TimerState},
@@ -162,6 +164,15 @@ pub async fn reset_timer(
 pub fn get_activity_history(db: State<Pool<ConnectionManager<SqliteConnection>>>) -> Vec<Activity> {
     let connection = &mut db.get().unwrap();
     match get_last_activities(connection) {
+        Some(activities) => activities,
+        None => vec![],
+    }
+}
+
+#[tauri::command]
+pub fn get_activities(db: State<Pool<ConnectionManager<SqliteConnection>>>) -> Vec<Activity> {
+    let connection = &mut db.get().unwrap();
+    match get_all_activities(connection) {
         Some(activities) => activities,
         None => vec![],
     }

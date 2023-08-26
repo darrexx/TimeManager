@@ -11,11 +11,6 @@
 	export let activities: Activity[];
 </script>
 
-<Heading
-	tag="h2"
-	class="my-4 text-center dark:text-slate-200"
-	customSize="text-3xl font-extrabold  md:text-5xl lg:text-5xl">Activities</Heading
->
 <Timeline class="mx-4">
 	{#each activities as activity}
 		<!-- TODO display more than 24 Hours -->
