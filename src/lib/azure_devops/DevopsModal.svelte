@@ -42,6 +42,19 @@
 				break;
 		}
 	};
+
+	const handleBack = () => {
+		switch (state) {
+			case ModalState.GetTeams:
+				projects = [];
+				state = ModalState.GetProject;
+				break;
+			case ModalState.Finish:
+				teams = [];
+				state = ModalState.GetTeams;
+				break;
+		}
+	};
 </script>
 
 <Modal bind:open size="sm">
@@ -109,6 +122,9 @@
 					placeholder="Select teams..."
 				/>
 			</div>
+		{/if}
+		{#if state != ModalState.GetProject}
+			<Button on:click={handleBack}>Back</Button>
 		{/if}
 		<Button on:click={handleClick} class="col-start-2">Next</Button>
 	</div>
