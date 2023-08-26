@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Heading, Timeline, TimelineItem } from 'flowbite-svelte';
+	import { Timeline, TimelineItem } from 'flowbite-svelte';
 	import dayjs from 'dayjs';
 	import duration from 'dayjs/plugin/duration'; // import plugin
 	import relativeTime from 'dayjs/plugin/relativeTime';

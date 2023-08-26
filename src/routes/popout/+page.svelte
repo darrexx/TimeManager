@@ -10,7 +10,7 @@
 	dayjs.extend(duration);
 
 	onMount(async () => {
-		const unlisten = await listen('timertick', (event) => {
+		await listen('timertick', (event) => {
 			counter = event.payload as number;
 		});
 	});

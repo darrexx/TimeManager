@@ -17,7 +17,7 @@ export async function getProjects(
 	pat: string,
 	organization: string
 ): Promise<string[]> {
-	let base64 = btoa(`${user}:${pat}`);
+	const base64 = btoa(`${user}:${pat}`);
 
 	const response = await fetch(`https://${url}/${organization}/_apis/projects?api-version=7.0`, {
 		headers: { Authorization: `Basic ${base64}` }
@@ -36,7 +36,7 @@ export async function getTeams(
 	organization: string,
 	project: string
 ): Promise<string[]> {
-	let base64 = btoa(`${user}:${pat}`);
+	const base64 = btoa(`${user}:${pat}`);
 
 	const response = await fetch(
 		`https://${url}/${organization}/_apis/projects/${project}/teams?api-version=7.0`,

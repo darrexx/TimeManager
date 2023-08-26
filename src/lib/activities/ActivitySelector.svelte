@@ -2,7 +2,7 @@
 	import DevopsModal from '$lib/azure_devops/DevopsModal.svelte';
 	import type { Workitem } from '$lib/azure_devops/devops';
 	import { invoke } from '@tauri-apps/api/tauri';
-	import { Alert, Button, Input, Select, Toggle } from 'flowbite-svelte';
+	import { Alert, Input, Select, Toggle } from 'flowbite-svelte';
 
 	export let value: number | string = '';
 	export let useAzureDevops = false;
