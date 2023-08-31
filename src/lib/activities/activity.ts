@@ -29,3 +29,26 @@ export function createActivity(commandActivity: CommandActivity): Activity {
 		workitem_id: commandActivity.workitem_id
 	};
 }
+
+export interface ActivityTime {
+	id: number;
+	activity_id: number;
+	start_time: Dayjs;
+	end_time: Dayjs;
+}
+
+export interface CommandActivityTime {
+	id: number;
+	activity_id: number;
+	start_time: number;
+	end_time: number;
+}
+
+export function createActivityTime(commandActivityTime: CommandActivityTime): ActivityTime {
+	return {
+		id: commandActivityTime.id,
+		activity_id: commandActivityTime.activity_id,
+		start_time: dayjs(commandActivityTime.start_time),
+		end_time: dayjs(commandActivityTime.end_time)
+	};
+}

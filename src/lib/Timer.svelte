@@ -21,11 +21,6 @@
 		dispatch('timerStarted');
 	};
 
-	const resetTimer = () => {
-		counter = 0;
-		invoke('reset_timer');
-	};
-
 	const stopTimer = () => {
 		dispatch('timerStopped');
 	};
@@ -38,8 +33,7 @@
 	>{dayjs.duration(counter, 'seconds').format('HH:mm:ss')}</Heading
 >
 
-<div class="m-3 flex flex-row gap-5 justify-around">
+<div class="m-3 flex flex-row gap-5 justify-evenly">
 	<GradientButton outline color="purpleToBlue" on:click={startTimer}>Start</GradientButton>
 	<GradientButton outline color="purpleToBlue" on:click={stopTimer}>Stop</GradientButton>
-	<GradientButton outline color="purpleToBlue" on:click={resetTimer}>Reset</GradientButton>
 </div>

@@ -11,9 +11,11 @@ use crate::{
     config::{Config, FrontendConfig},
     db::{
         activity::{
-            create_activity, get_activity, get_all_activities, get_last_activities, update_activity,
+            create_activity, create_activity_time, get_activity, get_all_activities,
+            get_all_activity_times, get_last_activities, get_last_activity_times, update_activity,
+            update_activity_time,
         },
-        models::Activity,
+        models::{Activity, ActivityTime},
     },
     state::{set_start_state, ConfigState, Frontend, FrontendState, TimerState},
     timer::TimerCommand,
@@ -99,7 +101,8 @@ async fn start_timer_internal(
             .send(TimerCommand::Start(existing_duration as u64))
             .unwrap();
     } else {
-        create_activity(connection, &activity_name, workitem_id);
+        let id = create_activity(connection, &activity_name, workitem_id);
+        create_activity_time(connection, id);
         sender_state.send(TimerCommand::Start(0)).unwrap();
     }
 
@@ -140,7 +143,8 @@ pub async fn stop_timer(
     let activity_duration = get_activity_duration(&timer.start_time, &timer.activity_duration);
     let activity_name = timer.activity_name.clone().unwrap();
 
-    update_activity(connection, &activity_name, activity_duration);
+    let updated_activity = update_activity(connection, &activity_name, activity_duration);
+    update_activity_time(connection, updated_activity);
 
     timer.start_time = None;
 
@@ -178,9 +182,31 @@ pub fn get_activity_history(db: State<Pool<ConnectionManager<SqliteConnection>>>
 }
 
 #[tauri::command]
+pub fn get_activity_time_history(
+    db: State<Pool<ConnectionManager<SqliteConnection>>>,
+) -> Vec<ActivityTime> {
+    let connection = &mut db.get().unwrap();
+    match get_last_activity_times(connection) {
+        Some(activities) => activities,
+        None => vec![],
+    }
+}
+
+#[tauri::command]
 pub fn get_activities(db: State<Pool<ConnectionManager<SqliteConnection>>>) -> Vec<Activity> {
     let connection = &mut db.get().unwrap();
     match get_all_activities(connection) {
+        Some(activities) => activities,
+        None => vec![],
+    }
+}
+
+#[tauri::command]
+pub fn get_activity_times(
+    db: State<Pool<ConnectionManager<SqliteConnection>>>,
+) -> Vec<ActivityTime> {
+    let connection = &mut db.get().unwrap();
+    match get_all_activity_times(connection) {
         Some(activities) => activities,
         None => vec![],
     }

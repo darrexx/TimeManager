@@ -22,3 +22,22 @@ pub struct NewActivity<'a> {
     pub last_modified: i64,
     pub workitem_id: Option<i64>,
 }
+
+#[derive(Queryable, Selectable, Serialize, Deserialize, Debug)]
+#[diesel(belongs_to(Activity))]
+#[diesel(table_name = crate::schema::activity_times)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct ActivityTime {
+    pub id: i32,
+    pub start_time: i64,
+    pub end_time: Option<i64>,
+    pub activity_id: i32,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::activity_times)]
+pub struct NewActivityTime {
+    pub start_time: i64,
+    pub end_time: Option<i64>,
+    pub activity_id: i32,
+}
