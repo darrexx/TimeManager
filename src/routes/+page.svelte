@@ -13,15 +13,16 @@
 	import ActivityTimeHistory from '$lib/activities/ActivityTimeHistory.svelte';
 
 	let currentActivity: number | string = '';
-	let activities: CommandActivity[] = [];
-	let activityTimes: CommandActivityTime[] = [];
+	let history: { activities: CommandActivity[]; activity_times: CommandActivityTime[] } = {
+		activities: [],
+		activity_times: []
+	};
 	let useAzureDevops = false;
 	let workitems: Workitem[];
 	let frontendState: FrontendState = { current_activity: '', popout_active: false };
 
 	onMount(async () => {
-		activities = await invoke('get_activity_history');
-		activityTimes = await invoke('get_activity_time_history');
+		history = await invoke('get_history');
 		frontendState = await invoke('get_frontend_state');
 		frontendState.current_activity ??= '';
 	});
@@ -40,7 +41,7 @@
 	const timerStopped = () => {
 		invoke('stop_timer');
 		setTimeout(async () => {
-			activities = await invoke('get_activity_history');
+			history = await invoke('get_history');
 		}, 500);
 	};
 
@@ -103,10 +104,10 @@
 		>
 	</div>
 	<div class="flex flex-row justify-around">
-		<ActivityHistory activities={activities.map(createActivity)} />
+		<ActivityHistory activities={history.activities.map(createActivity)} />
 		<ActivityTimeHistory
-			activities={activities.map(createActivity)}
-			activity_times={activityTimes.map(createActivityTime)}
+			activities={history.activities.map(createActivity)}
+			activity_times={history.activity_times.map(createActivityTime)}
 		/>
 	</div>
 </div>

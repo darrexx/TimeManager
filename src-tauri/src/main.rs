@@ -2,23 +2,25 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
-use commands::{
-    get_activities, get_activity_history, get_activity_time_history, get_activity_times,
-    get_config, get_frontend_state, get_workitems, reset_timer, save_devops_config, set_config,
-    start_timer, start_timer_with_workitem, stop_timer, toggle_popout,
-};
-use config::{AzureDevopsConfig, Config};
+use config::models::{AzureDevopsConfig, Config};
 use crossbeam::channel::bounded;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use state::{Frontend, Timer};
+use state::models::{Frontend, Timer};
 use tauri::async_runtime::Mutex;
-use tauri_helper::ConfigureTauri;
-use timer::TimerCommand;
+use tauri_helper::configure::ConfigureTauri;
+use timer::timer::TimerCommand;
 
+use crate::activity::commands::{get_activities, get_activity_times, get_history};
+use crate::azure_devops::commands::get_workitems;
+use crate::config::commands::save_devops_config;
+use crate::state::commands::{get_config, get_frontend_state, set_config};
+use crate::tauri_helper::commands::toggle_popout;
+use crate::timer::commands::{reset_timer, start_timer, start_timer_with_workitem, stop_timer};
+
+mod activity;
 mod azure_devops;
-mod commands;
 mod config;
 mod db;
 mod schema;
@@ -75,7 +77,6 @@ fn main() {
             start_timer,
             stop_timer,
             reset_timer,
-            get_activity_history,
             save_devops_config,
             get_workitems,
             start_timer_with_workitem,
@@ -84,8 +85,8 @@ fn main() {
             toggle_popout,
             get_activities,
             get_frontend_state,
-            get_activity_time_history,
-            get_activity_times
+            get_activity_times,
+            get_history
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
