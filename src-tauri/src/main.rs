@@ -7,6 +7,7 @@ use crossbeam::channel::bounded;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use kimai::client::{configure_kimai_httpclient, KimaiClient};
 use state::models::{Frontend, Timer};
 use tauri::async_runtime::Mutex;
 use tauri_helper::configure::ConfigureTauri;
@@ -15,6 +16,7 @@ use timer::timer::TimerCommand;
 use crate::activity::commands::{get_activities, get_activity_times, get_history};
 use crate::azure_devops::commands::get_workitems;
 use crate::config::commands::save_devops_config;
+use crate::kimai::commands::{get_customers, get_kimai_activities, get_projects};
 use crate::state::commands::{get_config, get_frontend_state, set_config};
 use crate::tauri_helper::commands::toggle_popout;
 use crate::timer::commands::{reset_timer, start_timer, start_timer_with_workitem, stop_timer};
@@ -23,6 +25,8 @@ mod activity;
 mod azure_devops;
 mod config;
 mod db;
+mod kimai;
+mod reqwest_helper;
 mod schema;
 mod state;
 mod tauri_helper;
@@ -33,9 +37,14 @@ const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 fn main() {
     let config: Config = confy::load("timemanager", None).unwrap();
 
-    let httpclient_pool = AzureDevopsClient(configure_devops_httpclient(
+    let devops_httpclient_pool = AzureDevopsClient(configure_devops_httpclient(
         &config.devops_config.user,
         &config.devops_config.pat,
+    ));
+
+    let kimai_httpclient_pool = KimaiClient(configure_kimai_httpclient(
+        &config.kimai_config.user,
+        &config.kimai_config.token,
     ));
 
     let (command_sender, command_receiver) = bounded::<TimerCommand>(10);
@@ -62,10 +71,11 @@ fn main() {
         .manage(command_sender)
         .manage(database_pool)
         .manage(timer_state)
-        .manage(frontend_state);
+        .manage(frontend_state)
+        .manage(kimai_httpclient_pool);
 
     if config.devops_config != AzureDevopsConfig::default() {
-        builder = builder.manage(httpclient_pool);
+        builder = builder.manage(devops_httpclient_pool);
     }
 
     let config_state = Mutex::new(config);
@@ -86,7 +96,10 @@ fn main() {
             get_activities,
             get_frontend_state,
             get_activity_times,
-            get_history
+            get_history,
+            get_projects,
+            get_customers,
+            get_kimai_activities
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

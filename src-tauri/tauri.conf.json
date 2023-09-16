@@ -1,21 +1,21 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "build": {
-    "beforeBuildCommand": "pnpm build",
-    "beforeDevCommand": "pnpm dev",
-    "devPath": "http://localhost:5173",
-    "distDir": "../build"
-  },
-  "package": {
-    "productName": "timemanager",
-    "version": "0.1.0"
-  },
-  "tauri": {
+	"$schema": "../node_modules/@tauri-apps/cli/schema.json",
+	"build": {
+		"beforeBuildCommand": "pnpm build",
+		"beforeDevCommand": "pnpm dev",
+		"devPath": "http://localhost:5173",
+		"distDir": "../build"
+	},
+	"package": {
+		"productName": "timemanager",
+		"version": "0.1.0"
+	},
+	"tauri": {
 		"systemTray": {
 			"iconPath": "icons/icon.png",
 			"iconAsTemplate": true
 		},
-    "allowlist": {
+		"allowlist": {
 			"all": false,
 			"window": {
 				"all": false,
@@ -53,57 +53,57 @@
 				"unmaximize": false,
 				"unminimize": false
 			}
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.tauri.dev",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
-    },
-    "security": {
-      "csp": null
-    },
-    "updater": {
-      "active": false
-    },
-    "windows": [
-      {
-        "label": "main",
-        "fullscreen": false,
-        "height": 600,
-        "resizable": true,
-        "title": "TimeManager",
-        "width": 800,
-        "transparent": false,
-        "decorations": true
-      }
-    ]
-  }
+		},
+		"bundle": {
+			"active": true,
+			"category": "DeveloperTool",
+			"copyright": "",
+			"deb": {
+				"depends": []
+			},
+			"externalBin": [],
+			"icon": [
+				"icons/32x32.png",
+				"icons/128x128.png",
+				"icons/128x128@2x.png",
+				"icons/icon.icns",
+				"icons/icon.ico"
+			],
+			"identifier": "timemanager",
+			"longDescription": "",
+			"macOS": {
+				"entitlements": null,
+				"exceptionDomain": "",
+				"frameworks": [],
+				"providerShortName": null,
+				"signingIdentity": null
+			},
+			"resources": [],
+			"shortDescription": "",
+			"targets": "all",
+			"windows": {
+				"certificateThumbprint": null,
+				"digestAlgorithm": "sha256",
+				"timestampUrl": ""
+			}
+		},
+		"security": {
+			"csp": null
+		},
+		"updater": {
+			"active": false
+		},
+		"windows": [
+			{
+				"label": "main",
+				"fullscreen": false,
+				"height": 600,
+				"resizable": true,
+				"title": "TimeManager",
+				"width": 800,
+				"transparent": false,
+				"decorations": true
+			}
+		]
+	}
 }

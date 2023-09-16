@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { GradientButton, Heading } from 'flowbite-svelte';
-	import { invoke } from '@tauri-apps/api/tauri';
 	import { listen } from '@tauri-apps/api/event';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import dayjs from 'dayjs';

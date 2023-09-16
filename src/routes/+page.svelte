@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DarkMode, Heading, Hr } from 'flowbite-svelte';
+	import { DarkMode, Hr } from 'flowbite-svelte';
 	import Timer from '$lib/Timer.svelte';
 	import ActivitySelector from '$lib/activities/ActivitySelector.svelte';
 	import { invoke } from '@tauri-apps/api/tauri';
@@ -12,13 +12,20 @@
 	import type { FrontendState } from '$lib/state';
 	import ActivityTimeHistory from '$lib/activities/ActivityTimeHistory.svelte';
 	import ActivityHistoryTitle from '$lib/activities/ActivityHistoryTitle.svelte';
+	import KimaiSelector from '$lib/kimai/KimaiSelector.svelte';
 
 	let currentActivity: number | string = '';
+	let currentKimaiCustomer: number | string = ''; //todo kimaistateobject?
+	let currentKimaiProject: number | string = '';
+	let currentKimaiActivity: number | string = '';
+
 	let history: { activities: CommandActivity[]; activity_times: CommandActivityTime[] } = {
 		activities: [],
 		activity_times: []
 	};
 	let useAzureDevops = false;
+	let useKimai = false;
+
 	let workitems: Workitem[];
 	let frontendState: FrontendState = { current_activity: '', popout_active: false };
 
@@ -40,7 +47,13 @@
 	};
 
 	const timerStopped = () => {
-		invoke('stop_timer');
+		invoke('stop_timer', {
+			kimai: {
+				use_kimai: useKimai,
+				project: useKimai ? currentKimaiProject : -1,
+				activity: useKimai ? currentKimaiActivity : -1
+			}
+		});
 		setTimeout(async () => {
 			history = await invoke('get_history');
 		}, 500);
@@ -73,6 +86,13 @@
 	<Timer on:timerStarted={timerStarted} on:timerStopped={timerStopped} />
 
 	<ActivitySelector bind:workitems bind:useAzureDevops bind:value={currentActivity} />
+	<Hr classHr="mx-6 my-3" />
+	<KimaiSelector
+		bind:useKimai
+		bind:customer={currentKimaiCustomer}
+		bind:project={currentKimaiProject}
+		bind:activity={currentKimaiActivity}
+	/>
 
 	<Hr classHr="m-8" />
 

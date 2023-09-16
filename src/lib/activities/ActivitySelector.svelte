@@ -38,17 +38,27 @@
 
 <DevopsModal on:finished={onToogleChange} bind:open={openModal} />
 
-<div class="h-10 m-6 flex flex-row gap-4 justify-evenly">
+<div class="h-10 mx-6 mt-6 mb-2 kimai-grid">
 	{#if useAzureDevops}
 		<Select items={selectWorkitems} bind:value />
 	{:else}
 		<Input type="text" placeholder="Activity" bind:value />
 	{/if}
-	<Toggle on:change={onToogleChange} bind:checked={useAzureDevops} color="blue"
-		>Use Azure DevOps</Toggle
-	>
+	<div class="self-center">
+		<Toggle on:change={onToogleChange} bind:checked={useAzureDevops} color="blue"
+			>Use Azure DevOps</Toggle
+		>
+	</div>
 </div>
 
 <Alert border color="red" class={`mx-6 ${hideAlert ? 'hidden' : ''}`}
 	>DevOps Api ist not working</Alert
 >
+
+<style>
+	.kimai-grid {
+		display: grid;
+		grid-template-columns: 1fr 8rem;
+		gap: 1rem;
+	}
+</style>

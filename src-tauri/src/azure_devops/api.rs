@@ -1,8 +1,10 @@
-use reqwest::{header, Client, Error, Response};
+use crate::reqwest_helper::{
+    error::ReqwestError,
+    helper::{get, patch, post},
+};
 
 use super::{
     client::AzureDevopsClient,
-    error::AzureDevopsError,
     models::Workitem,
     response_types::{CurrentWorkitemsForMe, TeamProjects, Teams, WorkitemList, WorkitemListValue},
 };
@@ -25,7 +27,7 @@ pub async fn get_my_workitems_for_current_iteration(
     organization: &String,
     project_name: &String,
     team_name: &String,
-) -> Result<Vec<i64>, AzureDevopsError> {
+) -> Result<Vec<i64>, ReqwestError> {
     let body = format!(wiql_query!(), project_name, team_name);
     let url = format!("https://{base_url}/{organization}/_apis/wit/wiql?api-version=7.0");
 
@@ -40,7 +42,7 @@ pub async fn get_team_projects(
     client: &AzureDevopsClient,
     base_url: &String,
     organization: &String,
-) -> Result<Vec<String>, AzureDevopsError> {
+) -> Result<Vec<String>, ReqwestError> {
     let url = format!("https://{base_url}/{organization}/_apis/projects?api-version=7.0");
 
     get(&client.0, url, |x: TeamProjects| {
@@ -55,7 +57,7 @@ pub async fn get_teams(
     base_url: &String,
     organization: &String,
     project_name: &String,
-) -> Result<Vec<String>, AzureDevopsError> {
+) -> Result<Vec<String>, ReqwestError> {
     let url = format!(
         "https://{base_url}/{organization}/_apis/projects/{project_name}/teams?api-version=7.0"
     );
@@ -72,7 +74,7 @@ pub async fn get_workitems_by_ids(
     organization: &String,
     project_name: &String,
     workitem_ids: Vec<i64>,
-) -> Result<Vec<Workitem>, AzureDevopsError> {
+) -> Result<Vec<Workitem>, ReqwestError> {
     let ids = workitem_ids
         .into_iter()
         .map(|x| x.to_string())
@@ -98,7 +100,7 @@ pub async fn update_workitem_to_in_progress(
     organization: &String,
     project_name: &String,
     workitem_id: i64,
-) -> Result<(), AzureDevopsError> {
+) -> Result<(), ReqwestError> {
     let body = r#"[
         {
           "op": "add",
@@ -117,69 +119,4 @@ pub async fn update_workitem_to_in_progress(
         |_: WorkitemListValue| (),
     )
     .await
-}
-
-async fn get<ResponseType: for<'de> serde::Deserialize<'de>, ReturnType>(
-    client: &Client,
-    url: String,
-    f: fn(ResponseType) -> ReturnType,
-) -> Result<ReturnType, AzureDevopsError> {
-    let result = client.get(url).send().await;
-
-    parse_result(result, f).await
-}
-
-async fn post<ResponseType: for<'de> serde::Deserialize<'de>, ReturnType>(
-    client: &Client,
-    url: String,
-    body: String,
-    f: fn(ResponseType) -> ReturnType,
-) -> Result<ReturnType, AzureDevopsError> {
-    let result = client.post(url).body(body).send().await;
-
-    parse_result(result, f).await
-}
-
-async fn patch<ResponseType: for<'de> serde::Deserialize<'de>, ReturnType>(
-    client: &Client,
-    url: String,
-    body: String,
-    content_type: String,
-    f: fn(ResponseType) -> ReturnType,
-) -> Result<ReturnType, AzureDevopsError> {
-    let result = client
-        .patch(url)
-        .header(header::CONTENT_TYPE, content_type)
-        .body(body)
-        .send()
-        .await;
-
-    parse_result(result, f).await
-}
-
-async fn parse_result<ResponseType: for<'de> serde::Deserialize<'de>, ReturnType>(
-    result: Result<Response, Error>,
-    f: fn(ResponseType) -> ReturnType,
-) -> Result<ReturnType, AzureDevopsError> {
-    let response = match result {
-        Ok(res) => res,
-        Err(e) => return Err(AzureDevopsError::ReqwestError(e)),
-    };
-
-    match response.error_for_status() {
-        Ok(res) => match res.json::<ResponseType>().await {
-            Ok(parsed) => Ok(f(parsed)),
-            Err(e) => {
-                println!("{:#?}", e);
-                Err(AzureDevopsError::ResponseJsonParseError(e))
-            }
-        },
-        Err(e) => {
-            if e.status() == Some(reqwest::StatusCode::UNAUTHORIZED) {
-                Err(AzureDevopsError::Unauthorized)
-            } else {
-                Err(AzureDevopsError::ErrorStatusCode(e))
-            }
-        }
-    }
 }

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ActivityTable from '$lib/activities/ActivityTable.svelte';
 	import ActivityTimeTable from '$lib/activities/ActivityTimeTable.svelte';
 	import {
 		createActivity,

@@ -1,6 +1,8 @@
 use tokio::sync::MutexGuard;
 
-use super::models::{AzureDevopsConfig, Config, FrontendAzureDevopsConfig, FrontendConfig};
+use super::models::{
+    AzureDevopsConfig, Config, FrontendAzureDevopsConfig, FrontendConfig, KimaiConfig,
+};
 
 impl From<&MutexGuard<'_, Config>> for Config {
     fn from(value: &MutexGuard<'_, Config>) -> Self {
@@ -13,6 +15,11 @@ impl From<&MutexGuard<'_, Config>> for Config {
                 project: value.devops_config.project.clone(),
                 team: value.devops_config.team.clone(),
                 automatically_update_workitems: value.devops_config.automatically_update_workitems,
+            },
+            kimai_config: KimaiConfig {
+                base_url: value.kimai_config.base_url.clone(),
+                user: value.kimai_config.user.clone(),
+                token: value.kimai_config.token.clone(),
             },
         }
     }
@@ -36,6 +43,7 @@ impl From<FrontendConfig> for Config {
     fn from(value: FrontendConfig) -> Self {
         Self {
             devops_config: AzureDevopsConfig::from(value.devops_config),
+            kimai_config: value.kimai_config,
         }
     }
 }
@@ -54,6 +62,16 @@ impl From<FrontendAzureDevopsConfig> for AzureDevopsConfig {
                 .to_lowercase()
                 .parse()
                 .unwrap(),
+        }
+    }
+}
+
+impl Default for KimaiConfig {
+    fn default() -> Self {
+        Self {
+            base_url: String::from("demo.kimai.org/api"),
+            user: String::from("john_user"),
+            token: String::from("kitten"),
         }
     }
 }

@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum AzureDevopsError {
+pub enum ReqwestError {
     #[error("reqwest Error")]
     ReqwestError(reqwest::Error),
     #[error("authentication not valid")]
@@ -12,7 +12,7 @@ pub enum AzureDevopsError {
     ResponseJsonParseError(reqwest::Error),
 }
 
-impl serde::Serialize for AzureDevopsError {
+impl serde::Serialize for ReqwestError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

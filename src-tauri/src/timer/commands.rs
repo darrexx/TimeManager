@@ -1,9 +1,10 @@
-use chrono::Utc;
+use chrono::{DateTime, TimeZone, Utc};
 use crossbeam::channel::Sender;
 use diesel::{
     r2d2::{ConnectionManager, Pool},
     SqliteConnection,
 };
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State};
 
 use crate::{
@@ -11,6 +12,7 @@ use crate::{
     db::activity::{
         create_activity, create_activity_time, get_activity, update_activity, update_activity_time,
     },
+    kimai::{api::post_timesheet, client::KimaiClient},
     state::{
         models::{ConfigState, FrontendState, TimerState},
         state::set_start_state,
@@ -121,6 +123,9 @@ pub async fn stop_timer(
     sender_state: State<'_, Sender<TimerCommand>>,
     timer_state: State<'_, TimerState>,
     db: State<'_, Pool<ConnectionManager<SqliteConnection>>>,
+    kimai_client: State<'_, KimaiClient>,
+    config: State<'_, ConfigState>,
+    kimai: KimaiCommandArguments,
 ) -> Result<(), ()> {
     sender_state.send(TimerCommand::Stop).unwrap();
 
@@ -136,11 +141,45 @@ pub async fn stop_timer(
     let activity_name = timer.activity_name.clone().unwrap();
 
     let updated_activity = update_activity(connection, &activity_name, activity_duration);
-    update_activity_time(connection, updated_activity);
+    let updated_activity_time = update_activity_time(connection, updated_activity);
+
+    if kimai.use_kimai {
+        let config = config.lock().await;
+
+        let start_time = DateTime::from(
+            Utc.timestamp_millis_opt(updated_activity_time.start_time)
+                .single()
+                .unwrap(),
+        );
+        let end_time = DateTime::from(
+            Utc.timestamp_millis_opt(updated_activity_time.end_time.unwrap())
+                .single()
+                .unwrap(),
+        );
+
+        post_timesheet(
+            &kimai_client.get(),
+            &config.kimai_config.base_url,
+            kimai.project,
+            kimai.activity,
+            start_time,
+            end_time,
+            activity_name,
+        )
+        .await
+        .unwrap();
+    }
 
     timer.start_time = None;
 
     Ok(())
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct KimaiCommandArguments {
+    pub use_kimai: bool,
+    pub project: i32,
+    pub activity: i32,
 }
 
 fn get_activity_duration(

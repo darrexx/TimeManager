@@ -157,7 +157,7 @@ pub fn update_activity(
 pub fn update_activity_time(
     connection: &mut PooledConnection<ConnectionManager<SqliteConnection>>,
     activity: Activity,
-) {
+) -> ActivityTime {
     use crate::schema::activity_times::dsl::*;
 
     let time_to_update: ActivityTime = activity_times
@@ -166,9 +166,11 @@ pub fn update_activity_time(
         .first(connection)
         .unwrap();
 
-    diesel::update(activity_times)
+    let updated_times = diesel::update(activity_times)
         .filter(id.eq(time_to_update.id))
         .set(end_time.eq(activity.last_modified))
-        .execute(connection)
+        .get_results(connection)
         .unwrap();
+
+    updated_times.into_iter().next().unwrap()
 }

@@ -35,7 +35,7 @@
 	<Heading
 		tag="h1"
 		class="my-4 text-center dark:text-slate-200"
-		customSize="text-4xl font-extrabold  md:text-5xl lg:text-5xl">Settings</Heading
+		customSize="text-4xl font-extrabold md:text-5xl lg:text-5xl">Settings</Heading
 	>
 
 	{#each Object.entries(configs) as config}
