@@ -2,6 +2,7 @@ use tokio::sync::MutexGuard;
 
 use super::models::Frontend;
 
+#[allow(clippy::derivable_impls)]
 impl Default for Frontend {
     fn default() -> Self {
         Self {

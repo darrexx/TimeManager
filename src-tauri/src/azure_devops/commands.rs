@@ -1,4 +1,4 @@
-use crate::{reqwest_helper::error::ReqwestError, state::models::ConfigState};
+use crate::{reqwest_helper::error::ApiError, state::models::ConfigState};
 
 use super::{
     api::{get_my_workitems_for_current_iteration, get_workitems_by_ids},
@@ -11,7 +11,7 @@ use tauri::{AppHandle, Manager, State};
 pub async fn get_workitems(
     app_handle: AppHandle,
     config: State<'_, ConfigState>,
-) -> Result<Vec<Workitem>, ReqwestError> {
+) -> Result<Vec<Workitem>, ApiError> {
     if let Some(client) = app_handle.try_state::<AzureDevopsClient>() {
         let config = config.lock().await;
 
@@ -35,6 +35,6 @@ pub async fn get_workitems(
 
         Ok(workitems)
     } else {
-        Err(ReqwestError::Unauthorized)
+        Err(ApiError::Unauthorized)
     }
 }

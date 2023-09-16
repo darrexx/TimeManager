@@ -5,30 +5,19 @@ use crate::{
     state::models::ConfigState,
 };
 
-use super::models::Config;
+use super::models::{AzureDevopsConfig, Config};
 
-#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn save_devops_config(
     app_handle: AppHandle,
     config: State<'_, ConfigState>,
-    url: String,
-    user: String,
-    pat: String,
-    organization: String,
-    project: String,
-    team: String,
+    devops_config: AzureDevopsConfig,
 ) -> Result<(), ()> {
-    let devops_client = configure_devops_httpclient(&user, &pat);
+    let devops_client = configure_devops_httpclient(&devops_config.user, &devops_config.pat);
     app_handle.manage(AzureDevopsClient(devops_client));
 
     let mut config = config.lock().await;
-    config.devops_config.base_url = url;
-    config.devops_config.user = user;
-    config.devops_config.pat = pat;
-    config.devops_config.organization = organization;
-    config.devops_config.project = project;
-    config.devops_config.team = team;
+    config.devops_config = devops_config;
 
     confy::store("timemanager", None, Config::from(&config)).unwrap();
 

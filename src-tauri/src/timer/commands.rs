@@ -44,6 +44,7 @@ pub async fn start_timer(
     .await
 }
 
+#[allow(clippy::too_many_arguments)] //too many arguments because of needed States
 #[tauri::command]
 pub async fn start_timer_with_workitem(
     app_handle: AppHandle,
@@ -68,6 +69,7 @@ pub async fn start_timer_with_workitem(
     .await
 }
 
+#[allow(clippy::too_many_arguments)] //too many arguments because of needed States
 async fn start_timer_internal(
     app_handle: &AppHandle,
     sender_state: State<'_, Sender<TimerCommand>>,
@@ -158,7 +160,7 @@ pub async fn stop_timer(
         );
 
         post_timesheet(
-            &kimai_client.get(),
+            kimai_client.get(),
             &config.kimai_config.base_url,
             kimai.project,
             kimai.activity,

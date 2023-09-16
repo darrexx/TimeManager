@@ -1,7 +1,7 @@
 use chrono::Local;
 
 use crate::reqwest_helper::{
-    error::ReqwestError,
+    error::ApiError,
     helper::{get, get_with_query_params, post},
 };
 
@@ -19,7 +19,7 @@ use super::{
 pub async fn get_customers(
     client: &KimaiClient,
     base_url: &String,
-) -> Result<Vec<GetCustomersResponse>, ReqwestError> {
+) -> Result<Vec<GetCustomersResponse>, ApiError> {
     let url = format!("https://{base_url}/customers");
 
     get(&client.0, url, std::convert::identity).await
@@ -29,7 +29,7 @@ pub async fn get_projects(
     client: &KimaiClient,
     base_url: &String,
     customer_id: &i32,
-) -> Result<Vec<Project>, ReqwestError> {
+) -> Result<Vec<Project>, ApiError> {
     let url = format!("https://{base_url}/projects");
 
     let mut query_params = Vec::new();
@@ -42,7 +42,7 @@ pub async fn get_activities(
     client: &KimaiClient,
     base_url: &String,
     project_id: &i32,
-) -> Result<Vec<KimaiActivity>, ReqwestError> {
+) -> Result<Vec<KimaiActivity>, ApiError> {
     let url = format!("https://{base_url}/activities");
 
     let mut query_params = Vec::new();
@@ -54,7 +54,7 @@ pub async fn get_activities(
 pub async fn get_teams(
     client: &KimaiClient,
     base_url: &String,
-) -> Result<Vec<GetTeamsResponse>, ReqwestError> {
+) -> Result<Vec<GetTeamsResponse>, ApiError> {
     let url = format!("https://{base_url}/teams");
 
     get(&client.0, url, std::convert::identity).await
@@ -65,7 +65,7 @@ pub async fn get_team(
     client: &KimaiClient,
     base_url: &String,
     team_id: &i32,
-) -> Result<GetTeamResponse, ReqwestError> {
+) -> Result<GetTeamResponse, ApiError> {
     let url = format!("https://{base_url}/teams/{team_id}");
 
     get(&client.0, url, std::convert::identity).await
@@ -79,7 +79,7 @@ pub async fn post_timesheet(
     start_time: chrono::DateTime<Local>,
     end_time: chrono::DateTime<Local>,
     description: String,
-) -> Result<TimeSheet, ReqwestError> {
+) -> Result<TimeSheet, ApiError> {
     let url = format!("https://{base_url}/timesheets");
 
     let body = PostTimeSheetBody {

@@ -1,5 +1,5 @@
 use crate::reqwest_helper::{
-    error::ReqwestError,
+    error::ApiError,
     helper::{get, patch, post},
 };
 
@@ -27,7 +27,7 @@ pub async fn get_my_workitems_for_current_iteration(
     organization: &String,
     project_name: &String,
     team_name: &String,
-) -> Result<Vec<i64>, ReqwestError> {
+) -> Result<Vec<i64>, ApiError> {
     let body = format!(wiql_query!(), project_name, team_name);
     let url = format!("https://{base_url}/{organization}/_apis/wit/wiql?api-version=7.0");
 
@@ -42,7 +42,7 @@ pub async fn get_team_projects(
     client: &AzureDevopsClient,
     base_url: &String,
     organization: &String,
-) -> Result<Vec<String>, ReqwestError> {
+) -> Result<Vec<String>, ApiError> {
     let url = format!("https://{base_url}/{organization}/_apis/projects?api-version=7.0");
 
     get(&client.0, url, |x: TeamProjects| {
@@ -57,7 +57,7 @@ pub async fn get_teams(
     base_url: &String,
     organization: &String,
     project_name: &String,
-) -> Result<Vec<String>, ReqwestError> {
+) -> Result<Vec<String>, ApiError> {
     let url = format!(
         "https://{base_url}/{organization}/_apis/projects/{project_name}/teams?api-version=7.0"
     );
@@ -74,7 +74,7 @@ pub async fn get_workitems_by_ids(
     organization: &String,
     project_name: &String,
     workitem_ids: Vec<i64>,
-) -> Result<Vec<Workitem>, ReqwestError> {
+) -> Result<Vec<Workitem>, ApiError> {
     let ids = workitem_ids
         .into_iter()
         .map(|x| x.to_string())
@@ -100,7 +100,7 @@ pub async fn update_workitem_to_in_progress(
     organization: &String,
     project_name: &String,
     workitem_id: i64,
-) -> Result<(), ReqwestError> {
+) -> Result<(), ApiError> {
     let body = r#"[
         {
           "op": "add",

@@ -60,11 +60,14 @@ export function saveDevopsConfig(
 	team: string
 ) {
 	invoke('save_devops_config', {
-		url: url,
-		user: user,
-		pat: pat,
-		organization: organization,
-		project: project,
-		team: team
+		devopsConfig: {
+			base_url: url,
+			user: user,
+			pat: pat,
+			organization: organization,
+			project: project,
+			team: team,
+			automatically_update_workitems: false
+		}
 	});
 }

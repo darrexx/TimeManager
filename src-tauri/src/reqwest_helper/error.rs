@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ReqwestError {
+pub enum ApiError {
     #[error("reqwest Error")]
     ReqwestError(reqwest::Error),
     #[error("authentication not valid")]
@@ -12,7 +12,7 @@ pub enum ReqwestError {
     ResponseJsonParseError(reqwest::Error),
 }
 
-impl serde::Serialize for ReqwestError {
+impl serde::Serialize for ApiError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
