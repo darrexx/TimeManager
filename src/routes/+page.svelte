@@ -18,6 +18,7 @@
 	let currentKimaiCustomer: number | string = ''; //todo kimaistateobject?
 	let currentKimaiProject: number | string = '';
 	let currentKimaiActivity: number | string = '';
+	let kimaiBillable: boolean;
 
 	let history: { activities: CommandActivity[]; activity_times: CommandActivityTime[] } = {
 		activities: [],
@@ -51,7 +52,8 @@
 			kimai: {
 				use_kimai: useKimai,
 				project: useKimai ? currentKimaiProject : -1,
-				activity: useKimai ? currentKimaiActivity : -1
+				activity: useKimai ? currentKimaiActivity : -1,
+				billable: useKimai ? kimaiBillable : -1
 			}
 		});
 		setTimeout(async () => {
@@ -92,9 +94,10 @@
 		bind:customer={currentKimaiCustomer}
 		bind:project={currentKimaiProject}
 		bind:activity={currentKimaiActivity}
+		bind:billable={kimaiBillable}
 	/>
 
-	<Hr classHr="m-8" />
+	<Hr classHr="m-6" />
 
 	<!-- {#await activitiesPromise}
 		<ListPlaceholder />

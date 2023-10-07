@@ -1,4 +1,4 @@
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Local, TimeZone, Utc};
 use crossbeam::channel::Sender;
 use diesel::{
     r2d2::{ConnectionManager, Pool},
@@ -12,7 +12,7 @@ use crate::{
     db::activity::{
         create_activity, create_activity_time, get_activity, update_activity, update_activity_time,
     },
-    kimai::{api::post_timesheet, client::KimaiClient},
+    kimai::{api::post_timesheet, client::KimaiClient, models::timesheet::PostTimeSheetBody},
     state::{
         models::{ConfigState, FrontendState, TimerState},
         state::set_start_state,
@@ -148,28 +148,29 @@ pub async fn stop_timer(
     if kimai.use_kimai {
         let config = config.lock().await;
 
-        let start_time = DateTime::from(
+        let start_time = DateTime::<Local>::from(
             Utc.timestamp_millis_opt(updated_activity_time.start_time)
                 .single()
                 .unwrap(),
         );
-        let end_time = DateTime::from(
+        let end_time = DateTime::<Local>::from(
             Utc.timestamp_millis_opt(updated_activity_time.end_time.unwrap())
                 .single()
                 .unwrap(),
         );
 
-        post_timesheet(
-            kimai_client.get(),
-            &config.kimai_config.base_url,
-            kimai.project,
-            kimai.activity,
-            start_time,
-            end_time,
-            activity_name,
-        )
-        .await
-        .unwrap();
+        let body = PostTimeSheetBody {
+            begin: format!("{}", start_time.format("%Y-%m-%dT%H:%M:%S")),
+            end: format!("{}", end_time.format("%Y-%m-%dT%H:%M:%S")),
+            project: kimai.project,
+            activity: kimai.activity,
+            description: activity_name,
+            billable: kimai.billable,
+        };
+
+        post_timesheet(kimai_client.get(), &config.kimai_config.base_url, body)
+            .await
+            .unwrap();
     }
 
     timer.start_time = None;
@@ -182,6 +183,7 @@ pub struct KimaiCommandArguments {
     pub use_kimai: bool,
     pub project: i32,
     pub activity: i32,
+    pub billable: bool,
 }
 
 fn get_activity_duration(

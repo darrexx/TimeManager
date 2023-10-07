@@ -5,6 +5,7 @@
 	export let customer: number | string = '';
 	export let project: number | string = '';
 	export let activity: number | string = '';
+	export let billable: boolean;
 	export let useKimai = false;
 
 	let customers: Customer[] = [];
@@ -58,7 +59,7 @@
 		on:change={onCustomerSelect}
 	/>
 
-	<div class="self-center row-span-3">
+	<div class="self-center row-span-4">
 		<Toggle on:change={onToogleChange} bind:checked={useKimai} color="blue">Track in Kimai</Toggle>
 	</div>
 
@@ -77,6 +78,9 @@
 		bind:value={activity}
 		disabled={!useKimai || activities.length == 0}
 	/>
+	<div class="justify-self-end">
+		<Toggle bind:checked={billable} color="red">Billable</Toggle>
+	</div>
 </div>
 
 <Alert border color="red" class={`mx-6 ${hideAlert ? 'hidden' : ''}`}

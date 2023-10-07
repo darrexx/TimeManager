@@ -1,5 +1,3 @@
-use chrono::Local;
-
 use crate::reqwest_helper::{
     error::ApiError,
     helper::{get, get_with_query_params, post},
@@ -74,21 +72,9 @@ pub async fn get_team(
 pub async fn post_timesheet(
     client: &KimaiClient,
     base_url: &String,
-    project: i32,
-    activity: i32,
-    start_time: chrono::DateTime<Local>,
-    end_time: chrono::DateTime<Local>,
-    description: String,
+    body: PostTimeSheetBody,
 ) -> Result<TimeSheet, ApiError> {
     let url = format!("https://{base_url}/timesheets");
-
-    let body = PostTimeSheetBody {
-        begin: format!("{}", start_time.format("%Y-%m-%dT%H:%M:%S")),
-        end: format!("{}", end_time.format("%Y-%m-%dT%H:%M:%S")),
-        project,
-        activity,
-        description,
-    };
 
     post(
         &client.0,

@@ -29,4 +29,5 @@ pub struct PostTimeSheetBody {
     pub project: i32,
     pub activity: i32,
     pub description: String,
+    pub billable: bool,
 }

@@ -1,12 +1,15 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::fs::create_dir_all;
+
 use azure_devops::client::{configure_devops_httpclient, AzureDevopsClient};
 use config::models::{AzureDevopsConfig, Config};
 use crossbeam::channel::bounded;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use directories::ProjectDirs;
 use kimai::client::{configure_kimai_httpclient, KimaiClient};
 use state::models::{Frontend, Timer};
 use tauri::async_runtime::Mutex;
@@ -57,8 +60,11 @@ fn main() {
         activity_duration: None,
     });
 
+    let db_path = get_db_path();
+    let db_path_str = db_path.to_str().unwrap();
+
     let database_pool = Pool::builder()
-        .build(ConnectionManager::<SqliteConnection>::new("activities.db"))
+        .build(ConnectionManager::<SqliteConnection>::new(db_path_str))
         .unwrap();
 
     run_db_migrations(&mut database_pool.get().unwrap());
@@ -108,4 +114,14 @@ fn main() {
 fn run_db_migrations(conn: &mut impl MigrationHarness<diesel::sqlite::Sqlite>) {
     conn.run_pending_migrations(MIGRATIONS)
         .expect("Could not run migrations");
+}
+
+fn get_db_path() -> std::path::PathBuf {
+    let project = ProjectDirs::from("", "", "timemanager").unwrap();
+    let mut data_dir = project.data_dir().to_owned();
+    create_dir_all(&data_dir).unwrap();
+
+    data_dir.push("db");
+    data_dir.set_extension("db");
+    data_dir
 }
