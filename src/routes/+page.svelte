@@ -53,7 +53,7 @@
 				use_kimai: useKimai,
 				project: useKimai ? currentKimaiProject : -1,
 				activity: useKimai ? currentKimaiActivity : -1,
-				billable: useKimai ? kimaiBillable : -1
+				billable: useKimai ? kimaiBillable : false
 			}
 		});
 		setTimeout(async () => {
